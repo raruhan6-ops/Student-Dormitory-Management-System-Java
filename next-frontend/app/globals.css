@@ -2,14 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-  --background: 255 255 255;
-  --foreground: 17 24 39;
+  --background: 250 250 252;
+  --foreground: 15 23 42;
+  --primary: 30 64 175;
+  --primary-foreground: 255 255 255;
+  --card: 255 255 255;
+  --card-foreground: 15 23 42;
+  --muted: 241 245 249;
+  --muted-foreground: 100 116 139;
+  --border: 226 232 240;
+  --accent: 217 70 239;
 }
 
 .dark {
-  --background: 17 24 39;
-  --foreground: 243 244 246;
+  --background: 15 23 42;
+  --foreground: 241 245 249;
+  --primary: 96 165 250;
+  --primary-foreground: 15 23 42;
+  --card: 30 41 59;
+  --card-foreground: 241 245 249;
+  --muted: 51 65 85;
+  --muted-foreground: 148 163 184;
+  --border: 51 65 85;
+  --accent: 232 121 249;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 html, body {
@@ -17,11 +39,245 @@ html, body {
 }
 
 body {
+  font-family: 'Inter', system-ui, sans-serif;
   color: rgb(var(--foreground));
   background: rgb(var(--background));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Simple utility classes */
-.container-section {
-  @apply container mx-auto px-4 py-12;
+/* Base layer styles */
+@layer base {
+  * {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold tracking-tight;
+  }
+}
+
+/* Component layer styles */
+@layer components {
+  /* Container section */
+  .container-section {
+    @apply container mx-auto px-4 py-8 sm:px-6 lg:px-8;
+  }
+
+  /* Professional card styles */
+  .card {
+    @apply rounded-xl border border-gray-200 bg-white p-6 shadow-soft transition-shadow hover:shadow-card dark:border-gray-700 dark:bg-gray-800/50;
+  }
+
+  .card-header {
+    @apply mb-4 flex items-center justify-between border-b border-gray-100 pb-4 dark:border-gray-700;
+  }
+
+  .card-title {
+    @apply text-lg font-semibold text-gray-900 dark:text-white;
+  }
+
+  /* Button styles */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500 dark:bg-primary-400 dark:text-gray-900 dark:hover:bg-primary-300;
+  }
+
+  .btn-secondary {
+    @apply btn border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700;
+  }
+
+  .btn-ghost {
+    @apply btn text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+
+  .btn-success {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-primary-400;
+  }
+
+  .input-label {
+    @apply mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400;
+  }
+
+  .badge-success {
+    @apply badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400;
+  }
+
+  .badge-info {
+    @apply badge bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400;
+  }
+
+  /* Table styles */
+  .table-container {
+    @apply overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800/50;
+  }
+
+  .table {
+    @apply min-w-full divide-y divide-gray-200 dark:divide-gray-700;
+  }
+
+  .table-header {
+    @apply bg-gray-50/80 dark:bg-gray-800/80;
+  }
+
+  .table-header-cell {
+    @apply px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400;
+  }
+
+  .table-body {
+    @apply divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-transparent;
+  }
+
+  .table-cell {
+    @apply px-4 py-4 text-sm text-gray-700 dark:text-gray-300;
+  }
+
+  .table-row {
+    @apply transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-700/30;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply card flex items-center gap-4;
+  }
+
+  .stat-icon {
+    @apply flex h-12 w-12 items-center justify-center rounded-xl;
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold text-gray-900 dark:text-white;
+  }
+
+  .stat-label {
+    @apply text-sm text-gray-500 dark:text-gray-400;
+  }
+
+  /* Modal styles */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm;
+  }
+
+  .modal-content {
+    @apply w-full max-w-lg animate-slide-up rounded-2xl bg-white p-6 shadow-elevated dark:bg-gray-800;
+  }
+
+  .modal-header {
+    @apply mb-4 flex items-center justify-between;
+  }
+
+  .modal-title {
+    @apply text-xl font-semibold text-gray-900 dark:text-white;
+  }
+
+  /* Page header */
+  .page-header {
+    @apply mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl;
+  }
+
+  .page-description {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+
+  /* Navigation link */
+  .nav-link {
+    @apply rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white;
+  }
+
+  .nav-link-active {
+    @apply nav-link bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400;
+  }
+
+  /* University hero gradient */
+  .hero-gradient {
+    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md dark:bg-gray-900/80;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+  }
+
+  .empty-state-icon {
+    @apply mb-4 h-12 w-12 text-gray-400;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-medium text-gray-900 dark:text-white;
+  }
+
+  .empty-state-description {
+    @apply mt-1 text-sm text-gray-500 dark:text-gray-400;
+  }
+
+  /* Tabs */
+  .tabs {
+    @apply flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800;
+  }
+
+  .tab {
+    @apply flex-1 rounded-md px-3 py-2 text-center text-sm font-medium text-gray-600 transition-all dark:text-gray-400;
+  }
+
+  .tab-active {
+    @apply tab bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white;
+  }
+}
+
+/* Utility layer */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .animate-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-500 to-accent-500 bg-clip-text text-transparent;
+  }
 }

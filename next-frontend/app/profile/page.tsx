@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, Home, Wrench, Edit, BedDouble } from 'lucide-react'
+import { User, Home, Wrench, Edit, BedDouble, Phone, Mail, Calendar, BookOpen, GraduationCap, Clock, CheckCircle, XCircle, RefreshCw, AlertCircle, Download, FileText } from 'lucide-react'
 import Link from 'next/link'
 
 type Student = {
@@ -29,19 +29,33 @@ type RepairRequest = {
   finishTime?: string
 }
 
+type RoomApplication = {
+  applicationID: number
+  status: string
+  applyTime: string
+  processTime: string | null
+  processedBy: string | null
+  rejectReason: string | null
+  buildingName: string
+  roomNumber: string
+  bedNumber: string
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const [student, setStudent] = useState<Student | null>(null)
   const [repairs, setRepairs] = useState<RepairRequest[]>([])
+  const [applications, setApplications] = useState<RoomApplication[]>([])
   const [loading, setLoading] = useState(true)
   const [needsProfile, setNeedsProfile] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const load = async () => {
       try {
-        // Get current user info from backend (includes relatedStudentID)
         const meRes = await fetch('/api/auth/me')
         if (!meRes.ok) {
           router.push('/auth')
@@ -52,29 +66,29 @@ export default function ProfilePage() {
         setUserRole(userInfo.role)
         setUsername(userInfo.username)
         
-        // If student role but no relatedStudentID, they need to create profile
         if (userInfo.role === 'Student' && !userInfo.relatedStudentID) {
           setNeedsProfile(true)
           setLoading(false)
           return
         }
         
-        // Non-students shouldn't see this page
         if (userInfo.role !== 'Student') {
           setLoading(false)
           return
         }
 
-        // Fetch student by relatedStudentID
         const studentRes = await fetch(`/api/students/${userInfo.relatedStudentID}`)
         if (studentRes.ok) {
           const studentData = await studentRes.json()
           if (studentData) {
             setStudent(studentData)
-            // Fetch repairs for this student
             const repairsRes = await fetch(`/api/repairs/student/${studentData.studentID}`)
             if (repairsRes.ok) {
               setRepairs(await repairsRes.json())
+            }
+            const appsRes = await fetch('/api/student-portal/my-applications', { credentials: 'include' })
+            if (appsRes.ok) {
+              setApplications(await appsRes.json())
             }
           } else {
             setNeedsProfile(true)
@@ -90,147 +104,657 @@ export default function ProfilePage() {
     load()
   }, [router])
 
-  if (loading) return <section className="container-section"><p>Loading…</p></section>
+  const exportToPDF = async () => {
+    if (!student) return
+    setExporting(true)
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      alert('Please allow pop-ups to export PDF')
+      setExporting(false)
+      return
+    }
+
+    const dormInfo = student.dormBuilding && student.roomNumber && student.bedNumber
+      ? `${student.dormBuilding} - Room ${student.roomNumber}, Bed ${student.bedNumber}`
+      : 'Not assigned'
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Student Profile - ${student.name}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 40px; 
+            color: #1f2937;
+            line-height: 1.6;
+          }
+          .header { 
+            text-align: center; 
+            padding-bottom: 24px; 
+            border-bottom: 3px solid #3b82f6;
+            margin-bottom: 32px;
+          }
+          .logo { 
+            font-size: 28px; 
+            font-weight: bold; 
+            color: #3b82f6;
+            margin-bottom: 8px;
+          }
+          .subtitle { 
+            color: #6b7280; 
+            font-size: 14px;
+          }
+          .document-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-top: 16px;
+          }
+          .section { 
+            margin-bottom: 28px; 
+          }
+          .section-title { 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #3b82f6;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          .info-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 16px;
+          }
+          .info-item { 
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+          }
+          .info-label { 
+            font-size: 11px; 
+            color: #6b7280; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+          }
+          .info-value { 
+            font-size: 15px; 
+            font-weight: 500;
+            color: #1f2937;
+          }
+          .dorm-box {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #a7f3d0;
+          }
+          .dorm-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #065f46;
+          }
+          .dorm-status {
+            font-size: 13px;
+            color: #047857;
+            margin-top: 4px;
+          }
+          .no-dorm {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #fcd34d;
+          }
+          .no-dorm .dorm-title {
+            color: #92400e;
+          }
+          .no-dorm .dorm-status {
+            color: #b45309;
+          }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+          }
+          .table th, .table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+          }
+          .table th {
+            background: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+          }
+          .table tr:last-child td {
+            border-bottom: none;
+          }
+          .status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+          }
+          .status-approved, .status-finished { background: #d1fae5; color: #065f46; }
+          .status-pending { background: #fef3c7; color: #92400e; }
+          .status-rejected { background: #fee2e2; color: #991b1b; }
+          .status-inprogress { background: #dbeafe; color: #1e40af; }
+          .footer { 
+            margin-top: 40px; 
+            padding-top: 20px; 
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+          }
+          .generated-date {
+            margin-top: 8px;
+            font-size: 11px;
+          }
+          @media print {
+            body { padding: 20px; }
+            .section { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">🏠 UniDorm</div>
+          <div class="subtitle">Student Dormitory Management System</div>
+          <div class="document-title">Student Profile Document</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Personal Information</div>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label">Student ID</div>
+              <div class="info-value">${student.studentID}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Full Name</div>
+              <div class="info-value">${student.name}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Gender</div>
+              <div class="info-value">${student.gender === 'M' ? 'Male' : student.gender === 'F' ? 'Female' : student.gender}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Major</div>
+              <div class="info-value">${student.major}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Class</div>
+              <div class="info-value">${student.studentClass}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Enrollment Year</div>
+              <div class="info-value">${student.enrollmentYear}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Phone</div>
+              <div class="info-value">${student.phone || 'Not provided'}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Email</div>
+              <div class="info-value">${student.email || 'Not provided'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Dormitory Assignment</div>
+          <div class="dorm-box ${!student.dormBuilding ? 'no-dorm' : ''}">
+            <div class="dorm-title">${dormInfo}</div>
+            <div class="dorm-status">${student.dormBuilding ? '✓ Currently assigned and checked in' : '○ No room currently assigned'}</div>
+          </div>
+        </div>
+
+        ${applications.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Room Applications History</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th>Applied Date</th>
+                <th>Status</th>
+                <th>Processed</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${applications.map(app => `
+                <tr>
+                  <td>${app.buildingName} - Room ${app.roomNumber}, Bed ${app.bedNumber}</td>
+                  <td>${new Date(app.applyTime).toLocaleDateString()}</td>
+                  <td><span class="status status-${app.status.toLowerCase()}">${app.status}</span></td>
+                  <td>${app.processTime ? new Date(app.processTime).toLocaleDateString() : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
+
+        ${repairs.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Repair Requests History</div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Room</th>
+                <th>Description</th>
+                <th>Submitted</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${repairs.map(r => `
+                <tr>
+                  <td>Room #${r.roomID}</td>
+                  <td>${r.description}</td>
+                  <td>${new Date(r.submitTime).toLocaleDateString()}</td>
+                  <td><span class="status status-${r.status.toLowerCase()}">${r.status}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        ` : ''}
+
+        <div class="footer">
+          <div>This document is an official record from UniDorm Student Dormitory Management System</div>
+          <div class="generated-date">Generated on ${new Date().toLocaleString()}</div>
+        </div>
+      </body>
+      </html>
+    `
+
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+    
+    // Wait for content to load then print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print()
+        setExporting(false)
+      }, 250)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="container-section">
+        <div className="flex min-h-[400px] flex-col items-center justify-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    )
+  }
   
-  // Non-student message
   if (userRole && userRole !== 'Student') {
     return (
-      <section className="container-section">
+      <div className="container-section">
         <div className="mx-auto max-w-md text-center">
-          <User className="mx-auto h-12 w-12 text-gray-400" />
-          <h2 className="mt-4 text-xl font-semibold">Staff Account</h2>
-          <p className="mt-2 text-gray-500">
-            Logged in as <strong>{username}</strong> ({userRole})
-          </p>
-          <p className="mt-1 text-sm text-gray-500">
-            This page is for student accounts only.
-          </p>
+          <div className="card p-12">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+              <User className="h-8 w-8" />
+            </div>
+            <h2 className="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Staff Account</h2>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Logged in as <strong>{username}</strong>
+            </p>
+            <span className="badge-primary mt-3">{userRole === 'Admin' ? 'Administrator' : 'Dorm Manager'}</span>
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+              This page is for student accounts only.
+            </p>
+          </div>
         </div>
-      </section>
+      </div>
     )
   }
   
-  // Needs to create profile
   if (needsProfile) {
     return (
-      <section className="container-section">
-        <div className="mx-auto max-w-md rounded-lg border border-blue-200 bg-blue-50 p-6 text-center dark:border-blue-800 dark:bg-blue-900/20">
-          <User className="mx-auto h-12 w-12 text-blue-500" />
-          <h2 className="mt-4 text-xl font-semibold">Welcome!</h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Please create your student profile to get started.
-          </p>
-          <button
-            onClick={() => router.push('/profile/setup')}
-            className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
-            Create Profile
-          </button>
+      <div className="container-section">
+        <div className="mx-auto max-w-md">
+          <div className="card bg-gradient-to-br from-primary-50 to-white p-8 text-center dark:from-primary-900/20 dark:to-gray-800">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400">
+              <GraduationCap className="h-8 w-8" />
+            </div>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Welcome to UniDorm!</h2>
+            <p className="mt-3 text-gray-600 dark:text-gray-400">
+              Complete your student profile to access dormitory services and apply for rooms.
+            </p>
+            <button
+              onClick={() => router.push('/profile/setup')}
+              className="btn-primary mt-6 w-full"
+            >
+              <User className="h-4 w-4" />
+              Create Your Profile
+            </button>
+          </div>
         </div>
-      </section>
+      </div>
     )
   }
 
-  if (!student) return <section className="container-section"><p>No profile data available.</p></section>
+  if (!student) {
+    return (
+      <div className="container-section">
+        <div className="flex min-h-[400px] flex-col items-center justify-center">
+          <AlertCircle className="h-12 w-12 text-gray-400" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">No profile data available.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <section className="container-section">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">My Profile</h2>
-        <Link
-          href="/profile/setup"
-          className="flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
-        >
-          <Edit size={14} /> Edit Profile
-        </Link>
+    <div className="container-section">
+      {/* Page Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+              <User className="h-5 w-5" />
+            </div>
+            My Profile
+          </h1>
+          <p className="page-description mt-1">
+            View and manage your student information
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={exportToPDF} 
+            disabled={exporting}
+            className="btn-secondary"
+          >
+            {exporting ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Export PDF
+              </>
+            )}
+          </button>
+          <Link href="/profile/setup" className="btn-secondary">
+            <Edit className="h-4 w-4" />
+            Edit Profile
+          </Link>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Personal Info */}
-        <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-700">
-          <h3 className="mb-4 flex items-center gap-2 font-semibold"><User size={18} /> Personal Information</h3>
-          <dl className="space-y-3">
-            <div className="flex justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
-              <dt className="text-sm text-gray-500">Student ID</dt>
-              <dd className="text-sm font-medium">{student.studentID}</dd>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column - Personal Info */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Personal Information Card */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title flex items-center gap-2">
+                <User className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                Personal Information
+              </h3>
             </div>
-            <div className="flex justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
-              <dt className="text-sm text-gray-500">Name</dt>
-              <dd className="text-sm font-medium">{student.name}</dd>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <InfoItem icon={<BookOpen className="h-4 w-4" />} label="Student ID" value={student.studentID} />
+              <InfoItem icon={<User className="h-4 w-4" />} label="Full Name" value={student.name} />
+              <InfoItem 
+                icon={<User className="h-4 w-4" />} 
+                label="Gender" 
+                value={student.gender === 'M' ? 'Male' : student.gender === 'F' ? 'Female' : student.gender} 
+              />
+              <InfoItem icon={<GraduationCap className="h-4 w-4" />} label="Major" value={student.major} />
+              <InfoItem icon={<BookOpen className="h-4 w-4" />} label="Class" value={student.studentClass} />
+              <InfoItem icon={<Calendar className="h-4 w-4" />} label="Enrollment Year" value={student.enrollmentYear.toString()} />
+              <InfoItem icon={<Phone className="h-4 w-4" />} label="Phone" value={student.phone || 'Not provided'} />
+              <InfoItem icon={<Mail className="h-4 w-4" />} label="Email" value={student.email || 'Not provided'} />
             </div>
-            <div className="flex justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
-              <dt className="text-sm text-gray-500">Gender</dt>
-              <dd className="text-sm font-medium">{student.gender === 'M' ? 'Male' : student.gender === 'F' ? 'Female' : student.gender}</dd>
-            </div>
-            <div className="flex justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
-              <dt className="text-sm text-gray-500">Major</dt>
-              <dd className="text-sm font-medium">{student.major}</dd>
-            </div>
-            <div className="flex justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
-              <dt className="text-sm text-gray-500">Class</dt>
-              <dd className="text-sm font-medium">{student.studentClass}</dd>
-            </div>
-            <div className="flex justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
-              <dt className="text-sm text-gray-500">Phone</dt>
-              <dd className="text-sm font-medium">{student.phone || '-'}</dd>
-            </div>
-            <div className="flex justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
-              <dt className="text-sm text-gray-500">Email</dt>
-              <dd className="text-sm font-medium">{student.email || '-'}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-sm text-gray-500">Enrollment Year</dt>
-              <dd className="text-sm font-medium">{student.enrollmentYear}</dd>
-            </div>
-          </dl>
-        </div>
+          </div>
 
-        {/* Dorm Assignment */}
-        <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-700">
-          <h3 className="mb-4 flex items-center gap-2 font-semibold"><Home size={18} /> Current Dorm Assignment</h3>
-          {student.dormBuilding && student.roomNumber && student.bedNumber ? (
-            <div className="rounded-md bg-green-50 p-4 dark:bg-green-900/20">
-              <p className="text-lg font-semibold text-green-700 dark:text-green-400">{student.dormBuilding}</p>
-              <p className="mt-1 text-sm text-green-600 dark:text-green-500">Room {student.roomNumber} • Bed {student.bedNumber}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="rounded-md bg-yellow-50 p-4 dark:bg-yellow-900/20">
-                <p className="text-sm text-yellow-700 dark:text-yellow-400">No dorm assigned yet.</p>
+          {/* Room Applications Card */}
+          {applications.length > 0 && (
+            <div className="card">
+              <div className="card-header">
+                <h3 className="card-title flex items-center gap-2">
+                  <BedDouble className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                  Room Applications
+                </h3>
+                <span className="badge-info">{applications.length} total</span>
               </div>
-              <Link
-                href="/apply-room"
-                className="flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-              >
-                <BedDouble size={16} /> Apply for a Room
-              </Link>
+              <div className="space-y-3">
+                {applications.map((app) => (
+                  <div key={app.applicationID} className="rounded-lg border border-gray-100 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {app.buildingName} - Room {app.roomNumber}, Bed {app.bedNumber}
+                        </p>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          Applied: {new Date(app.applyTime).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <StatusBadge status={app.status} />
+                    </div>
+                    {app.processTime && (
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Processed: {new Date(app.processTime).toLocaleDateString()} by {app.processedBy}
+                      </p>
+                    )}
+                    {app.rejectReason && (
+                      <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                        <strong>Reason:</strong> {app.rejectReason}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
+          {/* Repair Requests Card */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                My Repair Requests
+              </h3>
+              <span className="badge-info">{repairs.length} total</span>
+            </div>
+            {repairs.length === 0 ? (
+              <div className="empty-state py-8">
+                <Wrench className="empty-state-icon" />
+                <p className="empty-state-title">No repair requests</p>
+                <p className="empty-state-description">You haven't submitted any repair requests yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {repairs.map((r) => (
+                  <div key={r.repairID} className="rounded-lg border border-gray-100 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">Room #{r.roomID}</p>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{r.description}</p>
+                        <p className="mt-2 text-xs text-gray-500">
+                          Submitted: {new Date(r.submitTime).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <StatusBadge status={r.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column - Dorm Info */}
+        <div className="space-y-6">
+          {/* Current Dorm Assignment */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title flex items-center gap-2">
+                <Home className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                Dorm Assignment
+              </h3>
+            </div>
+            {student.dormBuilding && student.roomNumber && student.bedNumber ? (
+              <div className="rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 dark:from-emerald-900/30 dark:to-emerald-800/30">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white">
+                    <Home className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-emerald-800 dark:text-emerald-300">{student.dormBuilding}</p>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                      Room {student.roomNumber} • Bed {student.bedNumber}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Currently assigned</span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {applications.some(a => a.status === 'Pending') ? (
+                  <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 p-6 dark:from-blue-900/30 dark:to-blue-800/30">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white">
+                        <Clock className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-800 dark:text-blue-300">Application Pending</p>
+                        <p className="text-sm text-blue-600 dark:text-blue-400">Awaiting manager approval</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 p-6 dark:from-amber-900/30 dark:to-amber-800/30">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500 text-white">
+                        <BedDouble className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-amber-800 dark:text-amber-300">No Room Assigned</p>
+                        <p className="text-sm text-amber-600 dark:text-amber-400">Apply for a room to get started</p>
+                      </div>
+                    </div>
+                    <Link href="/apply-room" className="btn-primary mt-4 w-full">
+                      <BedDouble className="h-4 w-4" />
+                      Apply for Room
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">Quick Actions</h3>
+            </div>
+            <div className="space-y-2">
+              <button 
+                onClick={exportToPDF} 
+                disabled={exporting}
+                className="btn-primary w-full justify-start"
+              >
+                {exporting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    Export Profile as PDF
+                  </>
+                )}
+              </button>
+              <Link href="/apply-room" className="btn-secondary w-full justify-start">
+                <BedDouble className="h-4 w-4" />
+                Apply for Room
+              </Link>
+              <Link href="/repairs" className="btn-secondary w-full justify-start">
+                <Wrench className="h-4 w-4" />
+                Submit Repair Request
+              </Link>
+              <Link href="/profile/setup" className="btn-secondary w-full justify-start">
+                <Edit className="h-4 w-4" />
+                Update Profile
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* Repair Requests */}
-      <div className="mt-6 rounded-lg border border-gray-200 p-6 dark:border-gray-700">
-        <h3 className="mb-4 flex items-center gap-2 font-semibold"><Wrench size={18} /> My Repair Requests</h3>
-        {repairs.length === 0 ? (
-          <p className="text-sm text-gray-500">No repair requests submitted.</p>
-        ) : (
-          <div className="space-y-3">
-            {repairs.map((r) => (
-              <div key={r.repairID} className="rounded-md border border-gray-100 p-3 dark:border-gray-800">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Room #{r.roomID}</span>
-                  <span className={`rounded px-2 py-0.5 text-xs ${r.status === 'Finished' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : r.status === 'InProgress' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}>
-                    {r.status}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{r.description}</p>
-                <p className="mt-1 text-xs text-gray-500">Submitted: {new Date(r.submitTime).toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
-        )}
+function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
+      <div className="mt-0.5 text-gray-400">{icon}</div>
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="mt-0.5 font-medium text-gray-900 dark:text-white">{value}</p>
       </div>
-    </section>
+    </div>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const getStatusStyle = () => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'finished':
+        return 'badge-success'
+      case 'pending':
+        return 'badge-warning'
+      case 'rejected':
+        return 'badge-danger'
+      case 'inprogress':
+        return 'badge-info'
+      default:
+        return 'badge-primary'
+    }
+  }
+
+  const getIcon = () => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'finished':
+        return <CheckCircle className="h-3 w-3" />
+      case 'pending':
+        return <Clock className="h-3 w-3" />
+      case 'rejected':
+        return <XCircle className="h-3 w-3" />
+      default:
+        return null
+    }
+  }
+
+  return (
+    <span className={`${getStatusStyle()} flex items-center gap-1`}>
+      {getIcon()}
+      {status}
+    </span>
   )
 }

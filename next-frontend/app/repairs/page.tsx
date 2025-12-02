@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { Plus, Wrench, CheckCircle, Clock, X } from 'lucide-react'
+import { Plus, Wrench, CheckCircle, Clock, X, DoorOpen, User, Calendar, RefreshCw, Settings, AlertCircle } from 'lucide-react'
 
 type RepairRequest = {
   repairID: number
@@ -75,83 +75,278 @@ export default function RepairsPage() {
     }
   }
 
-  const statusIcon = (status: string) => {
-    if (status === 'Finished') return <CheckCircle size={16} className="text-green-600" />
-    if (status === 'InProgress') return <Clock size={16} className="text-yellow-600" />
-    return <Wrench size={16} className="text-gray-500" />
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'Finished':
+        return { icon: CheckCircle, color: 'emerald', badge: 'badge-success' }
+      case 'InProgress':
+        return { icon: Settings, color: 'amber', badge: 'badge-warning' }
+      default:
+        return { icon: Clock, color: 'gray', badge: 'badge-primary' }
+    }
+  }
+
+  // Stats
+  const pendingCount = requests.filter(r => r.status === 'Pending').length
+  const inProgressCount = requests.filter(r => r.status === 'InProgress').length
+  const finishedCount = requests.filter(r => r.status === 'Finished').length
+
+  if (loading) {
+    return (
+      <div className="container-section">
+        <div className="flex min-h-[400px] flex-col items-center justify-center">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading repair requests...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <section className="container-section">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold">Repair Requests</h2>
-        <button onClick={() => setModalOpen(true)} className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
-          <Plus size={16} /> New Request
+    <div className="container-section">
+      {/* Page Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+              <Wrench className="h-5 w-5" />
+            </div>
+            Repair Requests
+          </h1>
+          <p className="page-description mt-1">
+            Submit and track maintenance requests for dormitory facilities
+          </p>
+        </div>
+        <button onClick={() => setModalOpen(true)} className="btn-primary">
+          <Plus className="h-4 w-4" />
+          New Request
         </button>
       </div>
 
-      {/* Filter */}
-      <div className="mb-4 flex gap-2">
-        {(['all', 'Pending', 'InProgress', 'Finished'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-md px-3 py-1 text-sm ${filter === f ? 'bg-blue-600 text-white' : 'border border-gray-300 dark:border-gray-700'}`}
-          >
-            {f === 'all' ? 'All' : f}
-          </button>
-        ))}
-      </div>
-
-      {loading && <p>Loading…</p>}
-
-      <div className="space-y-3">
-        {filtered.map((r) => (
-          <div key={r.repairID} className="rounded-md border border-gray-200 p-4 dark:border-gray-700">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                {statusIcon(r.status)}
-                <span className="font-medium">Room #{r.roomID}</span>
-                <span className={`rounded px-2 py-0.5 text-xs ${r.status === 'Finished' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : r.status === 'InProgress' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}>
-                  {r.status}
-                </span>
-              </div>
-              {r.status !== 'Finished' && (
-                <button
-                  onClick={() => { setHandlerModal(r); setHandlerForm({ handler: r.handler || '', status: r.status === 'Pending' ? 'InProgress' : 'Finished' }) }}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  Update
-                </button>
-              )}
-            </div>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{r.description}</p>
-            <div className="mt-2 flex gap-4 text-xs text-gray-500">
-              <span>Submitted: {new Date(r.submitTime).toLocaleString()}</span>
-              {r.handler && <span>Handler: {r.handler}</span>}
-              {r.finishTime && <span>Finished: {new Date(r.finishTime).toLocaleString()}</span>}
-            </div>
+      {/* Stats */}
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="stat-card">
+          <div className="stat-icon bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
+            <Clock className="h-5 w-5" />
           </div>
-        ))}
-        {filtered.length === 0 && !loading && <p className="text-gray-500">No requests found.</p>}
+          <div>
+            <p className="stat-value">{pendingCount}</p>
+            <p className="stat-label">Pending</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+            <Settings className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="stat-value">{inProgressCount}</p>
+            <p className="stat-label">In Progress</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+            <CheckCircle className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="stat-value">{finishedCount}</p>
+            <p className="stat-label">Completed</p>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+            <Wrench className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="stat-value">{requests.length}</p>
+            <p className="stat-label">Total</p>
+          </div>
+        </div>
       </div>
+
+      {/* Filter Tabs */}
+      <div className="mb-6">
+        <div className="tabs">
+          {([
+            { value: 'all', label: 'All', count: requests.length },
+            { value: 'Pending', label: 'Pending', count: pendingCount },
+            { value: 'InProgress', label: 'In Progress', count: inProgressCount },
+            { value: 'Finished', label: 'Completed', count: finishedCount },
+          ] as const).map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`tab ${filter === f.value ? 'tab-active' : ''}`}
+            >
+              {f.label}
+              {f.count > 0 && (
+                <span className="ml-1.5 rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                  {f.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Requests List */}
+      {filtered.length === 0 ? (
+        <div className="card">
+          <div className="empty-state py-12">
+            <Wrench className="empty-state-icon" />
+            <p className="empty-state-title">No repair requests</p>
+            <p className="empty-state-description">
+              {filter === 'all' 
+                ? 'Submit a new repair request to get started.' 
+                : `No ${filter.toLowerCase()} requests found.`}
+            </p>
+            {filter === 'all' && (
+              <button onClick={() => setModalOpen(true)} className="btn-primary mt-4">
+                <Plus className="h-4 w-4" />
+                New Request
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((r) => {
+            const config = getStatusConfig(r.status)
+            const StatusIcon = config.icon
+            
+            return (
+              <div key={r.repairID} className="card p-0 overflow-hidden">
+                <div className="flex items-start gap-4 p-4">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-${config.color}-100 text-${config.color}-600 dark:bg-${config.color}-900/30 dark:text-${config.color}-400`}>
+                    <StatusIcon className="h-6 w-6" />
+                  </div>
+                  
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1.5 font-semibold text-gray-900 dark:text-white">
+                            <DoorOpen className="h-4 w-4 text-gray-400" />
+                            Room #{r.roomID}
+                          </span>
+                          <span className={config.badge}>{r.status === 'InProgress' ? 'In Progress' : r.status}</span>
+                        </div>
+                        <p className="mt-2 text-gray-700 dark:text-gray-300">{r.description}</p>
+                      </div>
+                      
+                      {r.status !== 'Finished' && (
+                        <button
+                          onClick={() => { 
+                            setHandlerModal(r)
+                            setHandlerForm({ handler: r.handler || '', status: r.status === 'Pending' ? 'InProgress' : 'Finished' }) 
+                          }}
+                          className="btn-secondary shrink-0 text-sm"
+                        >
+                          <Settings className="h-4 w-4" />
+                          Update
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                      <span className="flex items-center gap-1.5">
+                        <User className="h-3.5 w-3.5" />
+                        {r.submitterStudentID}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {new Date(r.submitTime).toLocaleDateString()}
+                      </span>
+                      {r.handler && (
+                        <span className="flex items-center gap-1.5">
+                          <Wrench className="h-3.5 w-3.5" />
+                          Handler: {r.handler}
+                        </span>
+                      )}
+                      {r.finishTime && (
+                        <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Completed: {new Date(r.finishTime).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* New Request Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">New Repair Request</h3>
-              <button onClick={() => setModalOpen(false)} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
+        <div className="modal-backdrop">
+          <div className="modal-content max-w-md">
+            <div className="modal-header">
+              <h3 className="modal-title flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-primary-600" />
+                New Repair Request
+              </h3>
+              <button onClick={() => setModalOpen(false)} className="modal-close">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <div className="space-y-3">
-              <input placeholder="Room ID" type="number" className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" value={form.roomID} onChange={(e) => setForm({ ...form, roomID: e.target.value })} />
-              <input placeholder="Your Student ID" className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" value={form.submitterStudentID} onChange={(e) => setForm({ ...form, submitterStudentID: e.target.value })} />
-              <textarea placeholder="Describe the issue…" rows={3} className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            
+            <div className="modal-body space-y-4">
+              <div>
+                <label className="input-label flex items-center gap-1.5">
+                  <DoorOpen className="h-3.5 w-3.5" />
+                  Room ID
+                </label>
+                <input 
+                  placeholder="e.g., 101" 
+                  type="number" 
+                  className="input" 
+                  value={form.roomID} 
+                  onChange={(e) => setForm({ ...form, roomID: e.target.value })} 
+                />
+              </div>
+              <div>
+                <label className="input-label flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" />
+                  Your Student ID
+                </label>
+                <input 
+                  placeholder="e.g., STU001" 
+                  className="input" 
+                  value={form.submitterStudentID} 
+                  onChange={(e) => setForm({ ...form, submitterStudentID: e.target.value })} 
+                />
+              </div>
+              <div>
+                <label className="input-label flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Issue Description
+                </label>
+                <textarea 
+                  placeholder="Describe the issue in detail…" 
+                  rows={4} 
+                  className="input resize-none" 
+                  value={form.description} 
+                  onChange={(e) => setForm({ ...form, description: e.target.value })} 
+                />
+              </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setModalOpen(false)} className="rounded-md border border-gray-300 px-4 py-2 text-sm dark:border-gray-700">Cancel</button>
-              <button onClick={handleSubmit} disabled={saving} className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50">{saving ? 'Submitting…' : 'Submit'}</button>
+            
+            <div className="modal-footer">
+              <button onClick={() => setModalOpen(false)} className="btn-secondary">Cancel</button>
+              <button onClick={handleSubmit} disabled={saving || !form.roomID || !form.description} className="btn-primary">
+                {saving ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Submit Request
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -159,26 +354,56 @@ export default function RepairsPage() {
 
       {/* Handler Modal */}
       {handlerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Update Request</h3>
-              <button onClick={() => setHandlerModal(null)} className="text-gray-500 hover:text-gray-700"><X size={20} /></button>
+        <div className="modal-backdrop">
+          <div className="modal-content max-w-md">
+            <div className="modal-header">
+              <h3 className="modal-title flex items-center gap-2">
+                <Settings className="h-5 w-5 text-primary-600" />
+                Update Request
+              </h3>
+              <button onClick={() => setHandlerModal(null)} className="modal-close">
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <div className="space-y-3">
-              <input placeholder="Handler Name" className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" value={handlerForm.handler} onChange={(e) => setHandlerForm({ ...handlerForm, handler: e.target.value })} />
-              <select className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800" value={handlerForm.status} onChange={(e) => setHandlerForm({ ...handlerForm, status: e.target.value })}>
-                <option value="InProgress">In Progress</option>
-                <option value="Finished">Finished</option>
-              </select>
+            
+            <div className="modal-body space-y-4">
+              <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Room #{handlerModal.roomID}</p>
+                <p className="mt-1 text-gray-900 dark:text-white">{handlerModal.description}</p>
+              </div>
+              
+              <div>
+                <label className="input-label">Handler Name</label>
+                <input 
+                  placeholder="Enter handler name" 
+                  className="input" 
+                  value={handlerForm.handler} 
+                  onChange={(e) => setHandlerForm({ ...handlerForm, handler: e.target.value })} 
+                />
+              </div>
+              <div>
+                <label className="input-label">Status</label>
+                <select 
+                  className="input" 
+                  value={handlerForm.status} 
+                  onChange={(e) => setHandlerForm({ ...handlerForm, status: e.target.value })}
+                >
+                  <option value="InProgress">In Progress</option>
+                  <option value="Finished">Completed</option>
+                </select>
+              </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setHandlerModal(null)} className="rounded-md border border-gray-300 px-4 py-2 text-sm dark:border-gray-700">Cancel</button>
-              <button onClick={handleUpdateStatus} className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">Save</button>
+            
+            <div className="modal-footer">
+              <button onClick={() => setHandlerModal(null)} className="btn-secondary">Cancel</button>
+              <button onClick={handleUpdateStatus} className="btn-primary">
+                <CheckCircle className="h-4 w-4" />
+                Save Changes
+              </button>
             </div>
           </div>
         </div>
       )}
-    </section>
+    </div>
   )
 }

@@ -46,7 +46,7 @@ export async function middleware(req: NextRequest) {
   const secret = process.env.AUTH_SECRET || 'change-me'
 
   // Protected routes that require authentication
-  const protectedPaths = ['/dashboard', '/students', '/buildings', '/checkin', '/repairs', '/profile', '/admin', '/batch', '/apply-room']
+  const protectedPaths = ['/dashboard', '/students', '/buildings', '/checkin', '/repairs', '/profile', '/admin', '/batch', '/apply-room', '/applications']
   const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
 
   if (!isProtected) return NextResponse.next()
@@ -59,7 +59,7 @@ export async function middleware(req: NextRequest) {
   if (!role) return NextResponse.redirect(new URL('/auth', req.url))
 
   // Role-based access control
-  const staffOnly = ['/students', '/buildings', '/checkin', '/batch', '/dashboard']
+  const staffOnly = ['/students', '/buildings', '/checkin', '/batch', '/dashboard', '/applications']
   const adminOnly = ['/admin']
 
   if (staffOnly.some((p) => pathname.startsWith(p)) && role !== 'Admin' && role !== 'DormManager') {
@@ -74,5 +74,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/students/:path*', '/buildings/:path*', '/checkin/:path*', '/repairs/:path*', '/profile/:path*', '/admin/:path*', '/batch/:path*', '/apply-room/:path*'],
+  matcher: ['/dashboard/:path*', '/students/:path*', '/buildings/:path*', '/checkin/:path*', '/repairs/:path*', '/profile/:path*', '/admin/:path*', '/batch/:path*', '/apply-room/:path*', '/applications/:path*'],
 }

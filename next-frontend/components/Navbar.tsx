@@ -3,6 +3,21 @@ import ThemeToggle from './ThemeToggle'
 import { cookies } from 'next/headers'
 import LogoutButton from './LogoutButton'
 import { verifyAndDecodeToken } from '@/lib/auth'
+import { 
+  GraduationCap, 
+  LayoutDashboard, 
+  Users, 
+  Building2, 
+  ClipboardCheck, 
+  FileStack,
+  Wrench,
+  UserCog,
+  ClipboardList,
+  User,
+  BedDouble,
+  Bell,
+  Menu
+} from 'lucide-react'
 
 export default function Navbar() {
   const raw = cookies().get('auth')?.value
@@ -16,38 +31,141 @@ export default function Navbar() {
   const isStudent = role === 'Student'
   const isStaff = isAdmin || isManager
 
+  const staffLinks = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/students', label: 'Students', icon: Users },
+    { href: '/buildings', label: 'Buildings', icon: Building2 },
+    { href: '/checkin', label: 'Check-In', icon: ClipboardCheck },
+    { href: '/applications', label: 'Applications', icon: FileStack },
+    { href: '/batch', label: 'Batch Ops', icon: ClipboardList },
+    { href: '/repairs', label: 'Repairs', icon: Wrench },
+  ]
+
+  const adminLinks = [
+    { href: '/admin/users', label: 'Users', icon: UserCog },
+    { href: '/admin/audit', label: 'Audit Log', icon: ClipboardList },
+  ]
+
+  const studentLinks = [
+    { href: '/profile', label: 'My Profile', icon: User },
+    { href: '/apply-room', label: 'Apply Room', icon: BedDouble },
+    { href: '/repairs', label: 'Repairs', icon: Wrench },
+  ]
+
   return (
-    <header className="border-b border-gray-200 dark:border-gray-800">
+    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:border-gray-800 dark:bg-gray-900/95">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="font-semibold tracking-tight">
-          Dormitory
+        {/* Logo & Brand */}
+        <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-500 text-white">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div className="hidden sm:block">
+            <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">UniDorm</span>
+            <span className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400">Management</span>
+          </div>
         </Link>
-        <nav className="flex flex-wrap items-center gap-3 text-sm">
+
+        {/* Navigation Links */}
+        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
           {username && (
             <>
-              {isStaff && <Link href="/dashboard" className="text-gray-600 hover:underline dark:text-gray-300">Dashboard</Link>}
-              {isStaff && <Link href="/students" className="text-gray-600 hover:underline dark:text-gray-300">Students</Link>}
-              {isStaff && <Link href="/buildings" className="text-gray-600 hover:underline dark:text-gray-300">Buildings</Link>}
-              {isStaff && <Link href="/checkin" className="text-gray-600 hover:underline dark:text-gray-300">Check-In</Link>}
-              {isStaff && <Link href="/batch" className="text-gray-600 hover:underline dark:text-gray-300">Batch</Link>}
-              <Link href="/repairs" className="text-gray-600 hover:underline dark:text-gray-300">Repairs</Link>
-              {isAdmin && <Link href="/admin/users" className="text-gray-600 hover:underline dark:text-gray-300">Users</Link>}
-              {isAdmin && <Link href="/admin/audit" className="text-gray-600 hover:underline dark:text-gray-300">Audit</Link>}
-              {isStudent && <Link href="/profile" className="text-gray-600 hover:underline dark:text-gray-300">Profile</Link>}
-              {isStudent && <Link href="/apply-room" className="text-gray-600 hover:underline dark:text-gray-300">Apply Room</Link>}
+              {/* Staff Navigation */}
+              {isStaff && staffLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="nav-link flex items-center gap-1.5"
+                >
+                  <link.icon className="h-4 w-4" />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
+
+              {/* Admin-only Links */}
+              {isAdmin && adminLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="nav-link flex items-center gap-1.5"
+                >
+                  <link.icon className="h-4 w-4" />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
+
+              {/* Student Navigation */}
+              {isStudent && studentLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="nav-link flex items-center gap-1.5"
+                >
+                  <link.icon className="h-4 w-4" />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
             </>
           )}
+        </nav>
+
+        {/* Right Side Actions */}
+        <div className="flex items-center gap-2">
           {username ? (
-            <div className="flex items-center gap-2">
-              <span className="text-gray-500 dark:text-gray-400">{username}</span>
+            <>
+              {/* User Info */}
+              <div className="hidden items-center gap-3 sm:flex">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{username}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {role === 'Admin' ? 'Administrator' : role === 'DormManager' ? 'Dorm Manager' : 'Student'}
+                  </p>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+                  <User className="h-4 w-4" />
+                </div>
+              </div>
               <LogoutButton />
-            </div>
+            </>
           ) : (
-            <Link href="/auth" className="text-gray-600 hover:underline dark:text-gray-300">Sign in</Link>
+            <Link 
+              href="/auth" 
+              className="btn-primary"
+            >
+              Sign In
+            </Link>
           )}
           <ThemeToggle />
-        </nav>
+        </div>
       </div>
+
+      {/* Mobile Navigation */}
+      {username && (
+        <div className="flex overflow-x-auto border-t border-gray-100 px-4 py-2 md:hidden dark:border-gray-800">
+          <div className="flex gap-1">
+            {isStaff && staffLinks.slice(0, 4).map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                <link.icon className="h-3.5 w-3.5" />
+                {link.label}
+              </Link>
+            ))}
+            {isStudent && studentLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                <link.icon className="h-3.5 w-3.5" />
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

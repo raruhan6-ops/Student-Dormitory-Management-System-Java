@@ -239,8 +239,8 @@ public class StudentPortalController {
         }
 
         // Check if student already has a pending application
-        RoomApplication pendingApp = roomApplicationRepository.findByStudentIDAndStatus(student.getStudentID(), "Pending");
-        if (pendingApp != null) {
+        boolean hasPending = roomApplicationRepository.existsByStudentIDAndStatus(student.getStudentID(), "Pending");
+        if (hasPending) {
             return ResponseEntity.badRequest().body("You already have a pending room application. Please wait for manager approval.");
         }
 
@@ -268,11 +268,11 @@ public class StudentPortalController {
         application.setStudentID(student.getStudentID());
         application.setBedID(bed.getBedID());
         application.setStatus("Pending");
-        application.setApplicationDate(LocalDate.now());
+        application.setApplyTime(LocalDateTime.now());
         roomApplicationRepository.save(application);
 
         // Audit log
-        auditService.log("ROOM_APPLICATION", student.getStudentID(),
+        auditService.log("ROOM_APPLICATION", "STUDENT", student.getStudentID(),
                 String.format("Room application submitted for %s Room %s Bed %s", 
                         building.getBuildingName(), room.getRoomNumber(), bed.getBedNumber()),
                 username);
@@ -317,10 +317,10 @@ public class StudentPortalController {
             Map<String, Object> appInfo = new HashMap<>();
             appInfo.put("applicationID", app.getApplicationID());
             appInfo.put("status", app.getStatus());
-            appInfo.put("applicationDate", app.getApplicationDate());
-            appInfo.put("reviewDate", app.getReviewDate());
-            appInfo.put("reviewedBy", app.getReviewedBy());
-            appInfo.put("notes", app.getNotes());
+            appInfo.put("applyTime", app.getApplyTime());
+            appInfo.put("processTime", app.getProcessTime());
+            appInfo.put("processedBy", app.getProcessedBy());
+            appInfo.put("rejectReason", app.getRejectReason());
 
             Bed bed = bedRepository.findById(app.getBedID()).orElse(null);
             if (bed != null) {
