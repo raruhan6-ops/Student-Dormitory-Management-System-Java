@@ -49,8 +49,8 @@ export default function AuthPage() {
           body: JSON.stringify({ username, password, captchaId, captchaText }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(typeof data === 'string' ? data : (data?.message || 'Login failed'))
-        setMessage({ text: 'Login successful! Redirecting…', type: 'success' })
+        if (!res.ok) throw new Error(typeof data === 'string' ? data : (data?.message || '登录失败'))
+        setMessage({ text: '登录成功！正在跳转…', type: 'success' })
         const redirectUrl = data.role === 'Student' ? '/profile' : '/dashboard'
         setTimeout(() => { window.location.href = redirectUrl }, 800)
       } else {
@@ -61,8 +61,8 @@ export default function AuthPage() {
           body: JSON.stringify(payload),
         })
         const data = await res.text()
-        if (!res.ok) throw new Error(data || 'Registration failed')
-        setMessage({ text: 'Account created successfully! Please sign in.', type: 'success' })
+        if (!res.ok) throw new Error(data || '注册失败')
+        setMessage({ text: '账户创建成功！请登录。', type: 'success' })
         setTimeout(() => {
           setMode('login')
           setPassword('')
@@ -70,7 +70,7 @@ export default function AuthPage() {
         }, 1500)
       }
     } catch (e: any) {
-      setMessage({ text: e?.message || 'Something went wrong', type: 'error' })
+      setMessage({ text: e?.message || '发生错误', type: 'error' })
       if (mode === 'login') loadCaptcha()
     } finally {
       setLoading(false)
@@ -88,12 +88,12 @@ export default function AuthPage() {
             </div>
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
-            {mode === 'login' ? 'Welcome back' : 'Create an account'}
+            {mode === 'login' ? '欢迎回来' : '创建账户'}
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             {mode === 'login' 
-              ? 'Sign in to access your dormitory portal' 
-              : 'Register as a student to get started'}
+              ? '登录以访问您的宿舍管理门户' 
+              : '注册学生账户以开始使用'}
           </p>
         </div>
 
@@ -106,14 +106,14 @@ export default function AuthPage() {
               className={mode === 'login' ? 'tab-active' : 'tab hover:bg-gray-50 dark:hover:bg-gray-700'}
             >
               <LogIn className="mr-2 inline h-4 w-4" />
-              Sign In
+              登录
             </button>
             <button
               onClick={() => setMode('signup')}
               className={mode === 'signup' ? 'tab-active' : 'tab hover:bg-gray-50 dark:hover:bg-gray-700'}
             >
               <UserPlus className="mr-2 inline h-4 w-4" />
-              Sign Up
+              注册
             </button>
           </div>
 
@@ -121,13 +121,13 @@ export default function AuthPage() {
           <form onSubmit={submit} className="space-y-5">
             {/* Username */}
             <div>
-              <label className="input-label">Username</label>
+              <label className="input-label">用户名</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   className="input pl-10"
-                  placeholder="Enter your username"
+                  placeholder="请输入用户名"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -137,13 +137,13 @@ export default function AuthPage() {
 
             {/* Password */}
             <div>
-              <label className="input-label">Password</label>
+              <label className="input-label">密码</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className="input pl-10 pr-10"
-                  placeholder="Enter your password"
+                  placeholder="请输入密码"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -161,7 +161,7 @@ export default function AuthPage() {
             {/* Captcha (Login only) */}
             {mode === 'login' && (
               <div>
-                <label className="input-label">Security Code</label>
+                <label className="input-label">验证码</label>
                 <div className="flex items-center gap-3">
                   <div className="relative flex-shrink-0">
                     {captchaLoading ? (
@@ -171,12 +171,12 @@ export default function AuthPage() {
                     ) : captchaImg ? (
                       <img 
                         src={captchaImg} 
-                        alt="captcha" 
+                        alt="验证码" 
                         className="h-12 rounded-lg border border-gray-200 dark:border-gray-600" 
                       />
                     ) : (
                       <div className="flex h-12 w-28 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-500 dark:bg-gray-700">
-                        Loading...
+                        加载中...
                       </div>
                     )}
                   </div>
@@ -185,14 +185,14 @@ export default function AuthPage() {
                     onClick={loadCaptcha}
                     disabled={captchaLoading}
                     className="btn-ghost rounded-lg p-2"
-                    title="Refresh captcha"
+                    title="刷新验证码"
                   >
                     <RefreshCw className={`h-5 w-5 ${captchaLoading ? 'animate-spin' : ''}`} />
                   </button>
                   <input
                     type="text"
                     className="input flex-1"
-                    placeholder="Enter code"
+                    placeholder="请输入验证码"
                     value={captchaText}
                     onChange={(e) => setCaptchaText(e.target.value)}
                     required
@@ -207,9 +207,9 @@ export default function AuthPage() {
                 <div className="flex items-start gap-3">
                   <GraduationCap className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
                   <div>
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-300">Student Account</p>
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-300">学生账户</p>
                     <p className="mt-1 text-xs text-blue-700 dark:text-blue-400">
-                      You'll be registered as a student. Complete your profile after signing in to apply for a room.
+                      您将以学生身份注册。登录后请完善个人资料以申请房间。
                     </p>
                   </div>
                 </div>
@@ -236,11 +236,11 @@ export default function AuthPage() {
               {loading ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  Please wait…
+                  请稍候…
                 </>
               ) : (
                 <>
-                  {mode === 'login' ? 'Sign In' : 'Create Account'}
+                  {mode === 'login' ? '登录' : '创建账户'}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -254,7 +254,7 @@ export default function AuthPage() {
             </div>
             <div className="relative flex justify-center">
               <span className="bg-white px-4 text-sm text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                {mode === 'login' ? 'New to UniDorm?' : 'Already have an account?'}
+                {mode === 'login' ? '还没有账户？' : '已有账户？'}
               </span>
             </div>
           </div>
@@ -264,26 +264,26 @@ export default function AuthPage() {
             onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
             className="btn-secondary w-full"
           >
-            {mode === 'login' ? 'Create a Student Account' : 'Sign In Instead'}
+            {mode === 'login' ? '创建学生账户' : '返回登录'}
           </button>
         </div>
 
         {/* Demo Credentials */}
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
           <p className="mb-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            Demo Credentials
+            演示账户
           </p>
           <div className="grid grid-cols-3 gap-3 text-center text-xs">
             <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
-              <p className="font-semibold text-gray-900 dark:text-white">Admin</p>
+              <p className="font-semibold text-gray-900 dark:text-white">管理员</p>
               <p className="text-gray-500 dark:text-gray-400">admin / admin123</p>
             </div>
             <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
-              <p className="font-semibold text-gray-900 dark:text-white">Manager</p>
+              <p className="font-semibold text-gray-900 dark:text-white">宿管</p>
               <p className="text-gray-500 dark:text-gray-400">manager / manager123</p>
             </div>
             <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-700">
-              <p className="font-semibold text-gray-900 dark:text-white">Student</p>
+              <p className="font-semibold text-gray-900 dark:text-white">学生</p>
               <p className="text-gray-500 dark:text-gray-400">student / student123</p>
             </div>
           </div>

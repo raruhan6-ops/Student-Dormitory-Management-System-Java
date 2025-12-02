@@ -5,8 +5,8 @@ import { Metadata } from 'next'
 import Navbar from '@/components/Navbar'
 
 export const metadata: Metadata = {
-  title: 'UniDorm - Student Dormitory Management System',
-  description: 'A comprehensive university dormitory management platform for students, managers, and administrators.',
+  title: '学生宿舍管理系统',
+  description: '高校学生宿舍综合管理平台，服务学生、宿管和管理员。',
   icons: {
     icon: '/favicon.ico',
   },
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="zh-CN" suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <div className="flex min-h-screen flex-col">

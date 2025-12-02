@@ -68,7 +68,7 @@ export default function ApplicationsPage() {
   }, [filterStatus]);
 
   const handleApprove = async (appId: number) => {
-    if (!confirm('Are you sure you want to approve this application? The student will be checked in immediately.')) {
+    if (!confirm('确定要批准此申请吗？学生将立即办理入住。')) {
       return;
     }
 
@@ -82,18 +82,18 @@ export default function ApplicationsPage() {
       
       // Handle concurrent booking conflict
       if (res.status === 409) {
-        const errorMsg = data.error || 'This bed has already been assigned to another student.';
-        alert(`⚠️ Concurrent Booking Conflict\n\n${errorMsg}\n\nThe application list will be refreshed.`);
+        const errorMsg = data.error || '该床位已被分配给其他学生。';
+        alert(`⚠️ 并发冲突\n\n${errorMsg}\n\n申请列表将会刷新。`);
         fetchApplications();
         return;
       }
       
-      if (!res.ok) throw new Error(data.error || data.message || data || 'Failed to approve');
-      alert(`✅ ${data.message}`);
+      if (!res.ok) throw new Error(data.error || data.message || data || '批准失败');
+      alert(`✅ ${data.message || '申请已批准'}`);
       fetchApplications();
     } catch (err: unknown) {
       const error = err as Error;
-      alert(`Error: ${error.message}`);
+      alert(`错误：${error.message}`);
     } finally {
       setProcessing(null);
     }
@@ -111,13 +111,13 @@ export default function ApplicationsPage() {
         body: JSON.stringify({ reason: rejectModal.reason })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data || 'Failed to reject');
-      alert('Application rejected');
+      if (!res.ok) throw new Error(data.message || data || '拒绝失败');
+      alert('申请已拒绝');
       setRejectModal({ show: false, appId: null, reason: '' });
       fetchApplications();
     } catch (err: unknown) {
       const error = err as Error;
-      alert(`Error: ${error.message}`);
+      alert(`错误：${error.message}`);
     } finally {
       setProcessing(null);
     }
@@ -134,21 +134,21 @@ export default function ApplicationsPage() {
         return (
           <span className="badge-warning flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            Pending
+            待审核
           </span>
         );
       case 'Approved':
         return (
           <span className="badge-success flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
-            Approved
+            已批准
           </span>
         );
       case 'Rejected':
         return (
           <span className="badge-danger flex items-center gap-1">
             <XCircle className="h-3 w-3" />
-            Rejected
+            已拒绝
           </span>
         );
       default:
@@ -164,7 +164,7 @@ export default function ApplicationsPage() {
       <div className="container-section">
         <div className="flex min-h-[400px] flex-col items-center justify-center">
           <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading applications...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">正在加载申请列表...</p>
         </div>
       </div>
     );
@@ -179,10 +179,10 @@ export default function ApplicationsPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
               <FileCheck className="h-5 w-5" />
             </div>
-            Room Applications
+            房间申请审批
           </h1>
           <p className="page-description mt-1">
-            Review and process student room applications
+            审核和处理学生的房间申请
           </p>
         </div>
         <button
@@ -190,7 +190,7 @@ export default function ApplicationsPage() {
           className="btn-secondary"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
+          返回控制台
         </button>
       </div>
 
@@ -202,7 +202,7 @@ export default function ApplicationsPage() {
           </div>
           <div>
             <p className="stat-value">{pendingCount}</p>
-            <p className="stat-label">Pending</p>
+            <p className="stat-label">待审核</p>
           </div>
         </div>
         <div className="stat-card">
@@ -211,7 +211,7 @@ export default function ApplicationsPage() {
           </div>
           <div>
             <p className="stat-value">{applications.filter(a => a.status === 'Approved').length || '-'}</p>
-            <p className="stat-label">Approved</p>
+            <p className="stat-label">已批准</p>
           </div>
         </div>
         <div className="stat-card">
@@ -220,7 +220,7 @@ export default function ApplicationsPage() {
           </div>
           <div>
             <p className="stat-value">{applications.filter(a => a.status === 'Rejected').length || '-'}</p>
-            <p className="stat-label">Rejected</p>
+            <p className="stat-label">已拒绝</p>
           </div>
         </div>
         <div className="stat-card">
@@ -229,7 +229,7 @@ export default function ApplicationsPage() {
           </div>
           <div>
             <p className="stat-value">{applications.length}</p>
-            <p className="stat-label">Total</p>
+            <p className="stat-label">总计</p>
           </div>
         </div>
       </div>
@@ -238,10 +238,10 @@ export default function ApplicationsPage() {
       <div className="mb-6">
         <div className="tabs">
           {[
-            { value: 'Pending', label: 'Pending', icon: Clock },
-            { value: 'Approved', label: 'Approved', icon: CheckCircle },
-            { value: 'Rejected', label: 'Rejected', icon: XCircle },
-            { value: '', label: 'All', icon: FileCheck },
+            { value: 'Pending', label: '待审核', icon: Clock },
+            { value: 'Approved', label: '已批准', icon: CheckCircle },
+            { value: 'Rejected', label: '已拒绝', icon: XCircle },
+            { value: '', label: '全部', icon: FileCheck },
           ].map((tab) => (
             <button
               key={tab.value}
@@ -273,8 +273,8 @@ export default function ApplicationsPage() {
         <div className="card">
           <div className="empty-state py-12">
             <FileX className="empty-state-icon" />
-            <p className="empty-state-title">No {filterStatus ? filterStatus.toLowerCase() : ''} applications</p>
-            <p className="empty-state-description">Applications matching your filter will appear here.</p>
+            <p className="empty-state-title">暂无{filterStatus === 'Pending' ? '待审核' : filterStatus === 'Approved' ? '已批准' : filterStatus === 'Rejected' ? '已拒绝' : ''}申请</p>
+            <p className="empty-state-description">符合筛选条件的申请将显示在此处。</p>
           </div>
         </div>
       ) : (
@@ -283,11 +283,11 @@ export default function ApplicationsPage() {
             <table className="table">
               <thead className="table-header">
                 <tr>
-                  <th className="table-header-cell">Student</th>
-                  <th className="table-header-cell">Room Request</th>
-                  <th className="table-header-cell">Applied</th>
-                  <th className="table-header-cell">Status</th>
-                  <th className="table-header-cell text-right">Actions</th>
+                  <th className="table-header-cell">学生</th>
+                  <th className="table-header-cell">申请房间</th>
+                  <th className="table-header-cell">申请时间</th>
+                  <th className="table-header-cell">状态</th>
+                  <th className="table-header-cell text-right">操作</th>
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -301,7 +301,7 @@ export default function ApplicationsPage() {
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">{app.studentName}</p>
                           <p className="text-sm text-gray-500">{app.studentID}</p>
-                          <p className="text-xs text-gray-400">{app.major} • {app.gender === 'M' ? 'Male' : 'Female'}</p>
+                          <p className="text-xs text-gray-400">{app.major} • {app.gender === 'Male' || app.gender === 'M' ? '男' : '女'}</p>
                         </div>
                       </div>
                     </td>
@@ -310,11 +310,18 @@ export default function ApplicationsPage() {
                         <Building2 className="h-4 w-4 text-gray-400" />
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">{app.buildingName}</p>
-                          <p className="text-sm text-gray-500">Room {app.roomNumber}, Bed {app.bedNumber}</p>
-                          {app.bedStatus !== 'Available' && app.status === 'Pending' && (
+                          <p className="text-sm text-gray-500">{app.roomNumber}室 {app.bedNumber}号床</p>
+                          {/* Only show warning if bed is Occupied (not Reserved - Reserved means it's held for this application) */}
+                          {app.bedStatus === 'Occupied' && app.status === 'Pending' && (
                             <span className="flex items-center gap-1 text-xs text-red-600">
                               <AlertTriangle className="h-3 w-3" />
-                              Bed no longer available
+                              床位已被占用
+                            </span>
+                          )}
+                          {app.bedStatus === 'Reserved' && app.status === 'Pending' && (
+                            <span className="flex items-center gap-1 text-xs text-blue-600">
+                              <BedDouble className="h-3 w-3" />
+                              已为此申请预留
                             </span>
                           )}
                         </div>
@@ -331,7 +338,7 @@ export default function ApplicationsPage() {
                         {getStatusBadge(app.status)}
                         {app.status !== 'Pending' && (
                           <p className="text-xs text-gray-400">
-                            by {app.processedBy}
+                            处理人：{app.processedBy}
                             <br />
                             {formatDateTime(app.processTime)}
                           </p>
@@ -350,7 +357,7 @@ export default function ApplicationsPage() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleApprove(app.applicationID)}
-                            disabled={processing === app.applicationID || app.bedStatus !== 'Available'}
+                            disabled={processing === app.applicationID || app.bedStatus === 'Occupied'}
                             className="btn-primary py-1.5 text-sm"
                           >
                             {processing === app.applicationID ? (
@@ -358,7 +365,7 @@ export default function ApplicationsPage() {
                             ) : (
                               <>
                                 <CheckCircle className="h-4 w-4" />
-                                Approve
+                                批准
                               </>
                             )}
                           </button>
@@ -368,7 +375,7 @@ export default function ApplicationsPage() {
                             className="btn-ghost py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
                           >
                             <XCircle className="h-4 w-4" />
-                            Reject
+                            拒绝
                           </button>
                         </div>
                       )}
@@ -388,7 +395,7 @@ export default function ApplicationsPage() {
             <div className="modal-header">
               <h3 className="modal-title flex items-center gap-2 text-red-600">
                 <XCircle className="h-5 w-5" />
-                Reject Application
+                拒绝申请
               </h3>
               <button 
                 onClick={() => setRejectModal({ show: false, appId: null, reason: '' })} 
@@ -400,12 +407,12 @@ export default function ApplicationsPage() {
             
             <div className="modal-body">
               <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                Please provide a reason for rejecting this application (optional):
+                请填写拒绝此申请的原因（可选）：
               </p>
               <textarea
                 value={rejectModal.reason}
                 onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
-                placeholder="e.g., Room is reserved for another department..."
+                placeholder="例如：该房间已预留给其他院系..."
                 className="input h-24 resize-none"
               />
             </div>
@@ -415,7 +422,7 @@ export default function ApplicationsPage() {
                 onClick={() => setRejectModal({ show: false, appId: null, reason: '' })}
                 className="btn-secondary"
               >
-                Cancel
+                取消
               </button>
               <button
                 onClick={handleReject}
@@ -425,12 +432,12 @@ export default function ApplicationsPage() {
                 {processing !== null ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    Rejecting...
+                    处理中...
                   </>
                 ) : (
                   <>
                     <XCircle className="h-4 w-4" />
-                    Reject Application
+                    确认拒绝
                   </>
                 )}
               </button>

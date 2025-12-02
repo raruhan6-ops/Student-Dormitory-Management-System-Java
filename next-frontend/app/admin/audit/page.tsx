@@ -51,7 +51,7 @@ export default function AuditPage() {
         setTotal(data.total || 0)
       }
     } catch (e) {
-      console.error('Failed to load audit logs:', e)
+      console.error('加载审计日志失败:', e)
     }
     setLoading(false)
   }
@@ -59,6 +59,18 @@ export default function AuditPage() {
   useEffect(() => { load() }, [page, filterEntity, filterAction, filterUser])
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+
+  const actionLabel = (action: string) => {
+    switch (action) {
+      case 'CREATE': return '创建'
+      case 'UPDATE': return '更新'
+      case 'DELETE': return '删除'
+      case 'CHECK_IN': return '入住'
+      case 'CHECK_OUT': return '退住'
+      case 'LOGIN': return '登录'
+      default: return action
+    }
+  }
 
   const actionColor = (action: string) => {
     switch (action) {
@@ -84,63 +96,63 @@ export default function AuditPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText size={24} className="text-blue-600" />
-          <h2 className="text-2xl font-semibold">Audit Logs</h2>
+          <h2 className="text-2xl font-semibold">审计日志</h2>
         </div>
-        <span className="text-sm text-gray-500">{total} records</span>
+        <span className="text-sm text-gray-500">{total} 条记录</span>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
         <Filter size={16} className="text-gray-500" />
         <input
-          placeholder="Filter by entity type…"
+          placeholder="按实体类型筛选…"
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800"
           value={filterEntity}
           onChange={(e) => { setFilterEntity(e.target.value); setFilterAction(''); setFilterUser(''); setPage(1) }}
         />
         <input
-          placeholder="Filter by action…"
+          placeholder="按操作筛选…"
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800"
           value={filterAction}
           onChange={(e) => { setFilterAction(e.target.value); setFilterEntity(''); setFilterUser(''); setPage(1) }}
         />
         <input
-          placeholder="Filter by user…"
+          placeholder="按用户筛选…"
           className="rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800"
           value={filterUser}
           onChange={(e) => { setFilterUser(e.target.value); setFilterEntity(''); setFilterAction(''); setPage(1) }}
         />
         {(filterEntity || filterAction || filterUser) && (
-          <button onClick={clearFilters} className="text-sm text-blue-600 hover:underline">Clear</button>
+          <button onClick={clearFilters} className="text-sm text-blue-600 hover:underline">清除</button>
         )}
       </div>
 
       {/* Table */}
       {loading ? (
-        <p>Loading…</p>
+        <p>加载中…</p>
       ) : (
         <>
           <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
               <thead className="bg-gray-50 dark:bg-gray-900/40">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold">Time</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold">Action</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold">Entity</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold">时间</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold">操作</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold">实体</th>
                   <th className="px-4 py-2 text-left text-xs font-semibold">ID</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold">Details</th>
-                  <th className="px-4 py-2 text-left text-xs font-semibold">User</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold">详情</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold">操作人</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {logs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/20">
                     <td className="whitespace-nowrap px-4 py-2 text-xs text-gray-500">
-                      {new Date(log.timestamp).toLocaleString()}
+                      {new Date(log.timestamp).toLocaleString('zh-CN')}
                     </td>
                     <td className="px-4 py-2">
                       <span className={`rounded px-2 py-0.5 text-xs font-medium ${actionColor(log.action)}`}>
-                        {log.action}
+                        {actionLabel(log.action)}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-sm">{log.entityType}</td>
@@ -154,7 +166,7 @@ export default function AuditPage() {
                 {logs.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
-                      No audit logs found.
+                      未找到审计日志。
                     </td>
                   </tr>
                 )}
@@ -170,15 +182,15 @@ export default function AuditPage() {
                 disabled={page <= 1}
                 className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-gray-700"
               >
-                <ChevronLeft size={16} /> Previous
+                <ChevronLeft size={16} /> 上一页
               </button>
-              <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
+              <span className="text-sm text-gray-500">第 {page} 页 / 共 {totalPages} 页</span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
                 className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-gray-700"
               >
-                Next <ChevronRight size={16} />
+                下一页 <ChevronRight size={16} />
               </button>
             </div>
           )}

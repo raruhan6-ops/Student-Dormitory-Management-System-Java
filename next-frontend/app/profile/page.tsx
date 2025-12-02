@@ -111,24 +111,24 @@ export default function ProfilePage() {
     // Create a new window for printing
     const printWindow = window.open('', '_blank')
     if (!printWindow) {
-      alert('Please allow pop-ups to export PDF')
+      alert('请允许弹出窗口以导出PDF')
       setExporting(false)
       return
     }
 
     const dormInfo = student.dormBuilding && student.roomNumber && student.bedNumber
-      ? `${student.dormBuilding} - Room ${student.roomNumber}, Bed ${student.bedNumber}`
-      : 'Not assigned'
+      ? `${student.dormBuilding} - ${student.roomNumber}室 ${student.bedNumber}号床`
+      : '未分配'
 
     const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Student Profile - ${student.name}</title>
+        <title>学生档案 - ${student.name}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             padding: 40px; 
             color: #1f2937;
             line-height: 1.6;
@@ -267,75 +267,75 @@ export default function ProfilePage() {
       </head>
       <body>
         <div class="header">
-          <div class="logo">🏠 UniDorm</div>
-          <div class="subtitle">Student Dormitory Management System</div>
-          <div class="document-title">Student Profile Document</div>
+          <div class="logo">🏠 宿舍管理系统</div>
+          <div class="subtitle">学生宿舍管理平台</div>
+          <div class="document-title">学生档案</div>
         </div>
 
         <div class="section">
-          <div class="section-title">Personal Information</div>
+          <div class="section-title">个人信息</div>
           <div class="info-grid">
             <div class="info-item">
-              <div class="info-label">Student ID</div>
+              <div class="info-label">学号</div>
               <div class="info-value">${student.studentID}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Full Name</div>
+              <div class="info-label">姓名</div>
               <div class="info-value">${student.name}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Gender</div>
-              <div class="info-value">${student.gender === 'M' ? 'Male' : student.gender === 'F' ? 'Female' : student.gender}</div>
+              <div class="info-label">性别</div>
+              <div class="info-value">${student.gender === 'M' || student.gender === 'Male' ? '男' : student.gender === 'F' || student.gender === 'Female' ? '女' : student.gender}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Major</div>
+              <div class="info-label">专业</div>
               <div class="info-value">${student.major}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Class</div>
+              <div class="info-label">班级</div>
               <div class="info-value">${student.studentClass}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Enrollment Year</div>
+              <div class="info-label">入学年份</div>
               <div class="info-value">${student.enrollmentYear}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Phone</div>
-              <div class="info-value">${student.phone || 'Not provided'}</div>
+              <div class="info-label">电话</div>
+              <div class="info-value">${student.phone || '未填写'}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Email</div>
-              <div class="info-value">${student.email || 'Not provided'}</div>
+              <div class="info-label">邮箱</div>
+              <div class="info-value">${student.email || '未填写'}</div>
             </div>
           </div>
         </div>
 
         <div class="section">
-          <div class="section-title">Dormitory Assignment</div>
+          <div class="section-title">宿舍分配</div>
           <div class="dorm-box ${!student.dormBuilding ? 'no-dorm' : ''}">
             <div class="dorm-title">${dormInfo}</div>
-            <div class="dorm-status">${student.dormBuilding ? '✓ Currently assigned and checked in' : '○ No room currently assigned'}</div>
+            <div class="dorm-status">${student.dormBuilding ? '✓ 已入住' : '○ 暂未分配房间'}</div>
           </div>
         </div>
 
         ${applications.length > 0 ? `
         <div class="section">
-          <div class="section-title">Room Applications History</div>
+          <div class="section-title">房间申请记录</div>
           <table class="table">
             <thead>
               <tr>
-                <th>Location</th>
-                <th>Applied Date</th>
-                <th>Status</th>
-                <th>Processed</th>
+                <th>位置</th>
+                <th>申请日期</th>
+                <th>状态</th>
+                <th>处理日期</th>
               </tr>
             </thead>
             <tbody>
               ${applications.map(app => `
                 <tr>
-                  <td>${app.buildingName} - Room ${app.roomNumber}, Bed ${app.bedNumber}</td>
+                  <td>${app.buildingName} - ${app.roomNumber}室 ${app.bedNumber}号床</td>
                   <td>${new Date(app.applyTime).toLocaleDateString()}</td>
-                  <td><span class="status status-${app.status.toLowerCase()}">${app.status}</span></td>
+                  <td><span class="status status-${app.status.toLowerCase()}">${app.status === 'Approved' ? '已批准' : app.status === 'Pending' ? '待审核' : app.status === 'Rejected' ? '已拒绝' : app.status}</span></td>
                   <td>${app.processTime ? new Date(app.processTime).toLocaleDateString() : '-'}</td>
                 </tr>
               `).join('')}
@@ -346,23 +346,23 @@ export default function ProfilePage() {
 
         ${repairs.length > 0 ? `
         <div class="section">
-          <div class="section-title">Repair Requests History</div>
+          <div class="section-title">报修记录</div>
           <table class="table">
             <thead>
               <tr>
-                <th>Room</th>
-                <th>Description</th>
-                <th>Submitted</th>
-                <th>Status</th>
+                <th>房间</th>
+                <th>问题描述</th>
+                <th>提交日期</th>
+                <th>状态</th>
               </tr>
             </thead>
             <tbody>
               ${repairs.map(r => `
                 <tr>
-                  <td>Room #${r.roomID}</td>
+                  <td>${r.roomID}号房</td>
                   <td>${r.description}</td>
                   <td>${new Date(r.submitTime).toLocaleDateString()}</td>
-                  <td><span class="status status-${r.status.toLowerCase()}">${r.status}</span></td>
+                  <td><span class="status status-${r.status.toLowerCase()}">${r.status === 'Pending' ? '待处理' : r.status === 'InProgress' ? '处理中' : r.status === 'Finished' ? '已完成' : r.status}</span></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -371,8 +371,8 @@ export default function ProfilePage() {
         ` : ''}
 
         <div class="footer">
-          <div>This document is an official record from UniDorm Student Dormitory Management System</div>
-          <div class="generated-date">Generated on ${new Date().toLocaleString()}</div>
+          <div>本文档由学生宿舍管理系统生成</div>
+          <div class="generated-date">生成时间：${new Date().toLocaleString()}</div>
         </div>
       </body>
       </html>
@@ -395,7 +395,7 @@ export default function ProfilePage() {
       <div className="container-section">
         <div className="flex min-h-[400px] flex-col items-center justify-center">
           <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading profile...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">正在加载资料...</p>
         </div>
       </div>
     )
@@ -409,13 +409,13 @@ export default function ProfilePage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
               <User className="h-8 w-8" />
             </div>
-            <h2 className="mt-6 text-xl font-semibold text-gray-900 dark:text-white">Staff Account</h2>
+            <h2 className="mt-6 text-xl font-semibold text-gray-900 dark:text-white">管理员账户</h2>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Logged in as <strong>{username}</strong>
+              当前登录：<strong>{username}</strong>
             </p>
-            <span className="badge-primary mt-3">{userRole === 'Admin' ? 'Administrator' : 'Dorm Manager'}</span>
+            <span className="badge-primary mt-3">{userRole === 'Admin' ? '系统管理员' : '宿舍管理员'}</span>
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-              This page is for student accounts only.
+              此页面仅供学生账户使用。
             </p>
           </div>
         </div>
@@ -431,16 +431,16 @@ export default function ProfilePage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/50 dark:text-primary-400">
               <GraduationCap className="h-8 w-8" />
             </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Welcome to UniDorm!</h2>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">欢迎使用宿舍管理系统！</h2>
             <p className="mt-3 text-gray-600 dark:text-gray-400">
-              Complete your student profile to access dormitory services and apply for rooms.
+              请完善您的学生资料以使用宿舍服务并申请房间。
             </p>
             <button
               onClick={() => router.push('/profile/setup')}
               className="btn-primary mt-6 w-full"
             >
               <User className="h-4 w-4" />
-              Create Your Profile
+              创建个人资料
             </button>
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function ProfilePage() {
       <div className="container-section">
         <div className="flex min-h-[400px] flex-col items-center justify-center">
           <AlertCircle className="h-12 w-12 text-gray-400" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">No profile data available.</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">暂无资料数据。</p>
         </div>
       </div>
     )
@@ -468,10 +468,10 @@ export default function ProfilePage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
               <User className="h-5 w-5" />
             </div>
-            My Profile
+            我的资料
           </h1>
           <p className="page-description mt-1">
-            View and manage your student information
+            查看和管理您的学生信息
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -483,18 +483,18 @@ export default function ProfilePage() {
             {exporting ? (
               <>
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                Exporting...
+                导出中...
               </>
             ) : (
               <>
                 <Download className="h-4 w-4" />
-                Export PDF
+                导出PDF
               </>
             )}
           </button>
           <Link href="/profile/setup" className="btn-secondary">
             <Edit className="h-4 w-4" />
-            Edit Profile
+            编辑资料
           </Link>
         </div>
       </div>
@@ -507,22 +507,22 @@ export default function ProfilePage() {
             <div className="card-header">
               <h3 className="card-title flex items-center gap-2">
                 <User className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                Personal Information
+                个人信息
               </h3>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <InfoItem icon={<BookOpen className="h-4 w-4" />} label="Student ID" value={student.studentID} />
-              <InfoItem icon={<User className="h-4 w-4" />} label="Full Name" value={student.name} />
+              <InfoItem icon={<BookOpen className="h-4 w-4" />} label="学号" value={student.studentID} />
+              <InfoItem icon={<User className="h-4 w-4" />} label="姓名" value={student.name} />
               <InfoItem 
                 icon={<User className="h-4 w-4" />} 
-                label="Gender" 
-                value={student.gender === 'M' ? 'Male' : student.gender === 'F' ? 'Female' : student.gender} 
+                label="性别" 
+                value={student.gender === 'M' || student.gender === 'Male' ? '男' : student.gender === 'F' || student.gender === 'Female' ? '女' : student.gender} 
               />
-              <InfoItem icon={<GraduationCap className="h-4 w-4" />} label="Major" value={student.major} />
-              <InfoItem icon={<BookOpen className="h-4 w-4" />} label="Class" value={student.studentClass} />
-              <InfoItem icon={<Calendar className="h-4 w-4" />} label="Enrollment Year" value={student.enrollmentYear.toString()} />
-              <InfoItem icon={<Phone className="h-4 w-4" />} label="Phone" value={student.phone || 'Not provided'} />
-              <InfoItem icon={<Mail className="h-4 w-4" />} label="Email" value={student.email || 'Not provided'} />
+              <InfoItem icon={<GraduationCap className="h-4 w-4" />} label="专业" value={student.major} />
+              <InfoItem icon={<BookOpen className="h-4 w-4" />} label="班级" value={student.studentClass} />
+              <InfoItem icon={<Calendar className="h-4 w-4" />} label="入学年份" value={student.enrollmentYear.toString()} />
+              <InfoItem icon={<Phone className="h-4 w-4" />} label="电话" value={student.phone || '未填写'} />
+              <InfoItem icon={<Mail className="h-4 w-4" />} label="邮箱" value={student.email || '未填写'} />
             </div>
           </div>
 
@@ -532,9 +532,9 @@ export default function ProfilePage() {
               <div className="card-header">
                 <h3 className="card-title flex items-center gap-2">
                   <BedDouble className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                  Room Applications
+                  房间申请记录
                 </h3>
-                <span className="badge-info">{applications.length} total</span>
+                <span className="badge-info">共 {applications.length} 条</span>
               </div>
               <div className="space-y-3">
                 {applications.map((app) => (
@@ -542,22 +542,22 @@ export default function ProfilePage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {app.buildingName} - Room {app.roomNumber}, Bed {app.bedNumber}
+                          {app.buildingName} - {app.roomNumber}室 {app.bedNumber}号床
                         </p>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          Applied: {new Date(app.applyTime).toLocaleDateString()}
+                          申请时间：{new Date(app.applyTime).toLocaleDateString()}
                         </p>
                       </div>
                       <StatusBadge status={app.status} />
                     </div>
                     {app.processTime && (
                       <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Processed: {new Date(app.processTime).toLocaleDateString()} by {app.processedBy}
+                        处理时间：{new Date(app.processTime).toLocaleDateString()} 处理人：{app.processedBy}
                       </p>
                     )}
                     {app.rejectReason && (
                       <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                        <strong>Reason:</strong> {app.rejectReason}
+                        <strong>拒绝原因：</strong> {app.rejectReason}
                       </p>
                     )}
                   </div>
@@ -571,15 +571,15 @@ export default function ProfilePage() {
             <div className="card-header">
               <h3 className="card-title flex items-center gap-2">
                 <Wrench className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                My Repair Requests
+                我的报修记录
               </h3>
-              <span className="badge-info">{repairs.length} total</span>
+              <span className="badge-info">共 {repairs.length} 条</span>
             </div>
             {repairs.length === 0 ? (
               <div className="empty-state py-8">
                 <Wrench className="empty-state-icon" />
-                <p className="empty-state-title">No repair requests</p>
-                <p className="empty-state-description">You haven't submitted any repair requests yet.</p>
+                <p className="empty-state-title">暂无报修记录</p>
+                <p className="empty-state-description">您还没有提交过报修请求。</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -587,10 +587,10 @@ export default function ProfilePage() {
                   <div key={r.repairID} className="rounded-lg border border-gray-100 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">Room #{r.roomID}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{r.roomID}号房</p>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{r.description}</p>
                         <p className="mt-2 text-xs text-gray-500">
-                          Submitted: {new Date(r.submitTime).toLocaleDateString()}
+                          提交时间：{new Date(r.submitTime).toLocaleDateString()}
                         </p>
                       </div>
                       <StatusBadge status={r.status} />
@@ -609,7 +609,7 @@ export default function ProfilePage() {
             <div className="card-header">
               <h3 className="card-title flex items-center gap-2">
                 <Home className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                Dorm Assignment
+                宿舍分配
               </h3>
             </div>
             {student.dormBuilding && student.roomNumber && student.bedNumber ? (
@@ -621,13 +621,13 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-lg font-bold text-emerald-800 dark:text-emerald-300">{student.dormBuilding}</p>
                     <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                      Room {student.roomNumber} • Bed {student.bedNumber}
+                      {student.roomNumber}室 • {student.bedNumber}号床
                     </p>
                   </div>
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
                   <CheckCircle className="h-4 w-4" />
-                  <span>Currently assigned</span>
+                  <span>已入住</span>
                 </div>
               </div>
             ) : (
@@ -639,8 +639,8 @@ export default function ProfilePage() {
                         <Clock className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="font-semibold text-blue-800 dark:text-blue-300">Application Pending</p>
-                        <p className="text-sm text-blue-600 dark:text-blue-400">Awaiting manager approval</p>
+                        <p className="font-semibold text-blue-800 dark:text-blue-300">申请审核中</p>
+                        <p className="text-sm text-blue-600 dark:text-blue-400">等待管理员审批</p>
                       </div>
                     </div>
                   </div>
@@ -651,13 +651,13 @@ export default function ProfilePage() {
                         <BedDouble className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="font-semibold text-amber-800 dark:text-amber-300">No Room Assigned</p>
-                        <p className="text-sm text-amber-600 dark:text-amber-400">Apply for a room to get started</p>
+                        <p className="font-semibold text-amber-800 dark:text-amber-300">暂未分配房间</p>
+                        <p className="text-sm text-amber-600 dark:text-amber-400">申请房间以开始入住</p>
                       </div>
                     </div>
                     <Link href="/apply-room" className="btn-primary mt-4 w-full">
                       <BedDouble className="h-4 w-4" />
-                      Apply for Room
+                      申请房间
                     </Link>
                   </div>
                 )}
@@ -668,7 +668,7 @@ export default function ProfilePage() {
           {/* Quick Actions */}
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title">Quick Actions</h3>
+              <h3 className="card-title">快捷操作</h3>
             </div>
             <div className="space-y-2">
               <button 
@@ -679,26 +679,26 @@ export default function ProfilePage() {
                 {exporting ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin" />
-                    Generating PDF...
+                    正在生成PDF...
                   </>
                 ) : (
                   <>
                     <FileText className="h-4 w-4" />
-                    Export Profile as PDF
+                    导出个人档案PDF
                   </>
                 )}
               </button>
               <Link href="/apply-room" className="btn-secondary w-full justify-start">
                 <BedDouble className="h-4 w-4" />
-                Apply for Room
+                申请房间
               </Link>
               <Link href="/repairs" className="btn-secondary w-full justify-start">
                 <Wrench className="h-4 w-4" />
-                Submit Repair Request
+                提交报修
               </Link>
               <Link href="/profile/setup" className="btn-secondary w-full justify-start">
                 <Edit className="h-4 w-4" />
-                Update Profile
+                更新资料
               </Link>
             </div>
           </div>

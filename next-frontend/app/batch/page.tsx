@@ -13,7 +13,7 @@ export default function BatchPage() {
   const handleExport = async () => {
     try {
       const res = await fetch('/api/batch/students/export')
-      if (!res.ok) throw new Error('Export failed')
+      if (!res.ok) throw new Error('导出失败')
       
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
@@ -25,7 +25,7 @@ export default function BatchPage() {
       window.URL.revokeObjectURL(url)
       a.remove()
     } catch (e: any) {
-      alert(e?.message || 'Export failed')
+      alert(e?.message || '导出失败')
     }
   }
 
@@ -47,14 +47,14 @@ export default function BatchPage() {
       setImportResult(data)
       setImportFile(null)
     } catch (e: any) {
-      setImportResult({ imported: 0, errors: [e?.message || 'Import failed'] })
+      setImportResult({ imported: 0, errors: [e?.message || '导入失败'] })
     }
     setLoading(false)
   }
 
   const handleBatchDelete = async () => {
     if (!deleteIds.trim()) return
-    if (!confirm('Are you sure you want to delete these students?')) return
+    if (!confirm('确定要删除这些学生吗？')) return
     setLoading(true)
     setDeleteResult(null)
 
@@ -71,30 +71,30 @@ export default function BatchPage() {
       setDeleteResult(data)
       if (data.deleted > 0) setDeleteIds('')
     } catch (e: any) {
-      setDeleteResult({ deleted: 0, notFound: 0, errors: [e?.message || 'Delete failed'] })
+      setDeleteResult({ deleted: 0, notFound: 0, errors: [e?.message || '删除失败'] })
     }
     setLoading(false)
   }
 
   return (
     <section className="container-section space-y-6">
-      <h2 className="text-2xl font-semibold">Batch Operations</h2>
+      <h2 className="text-2xl font-semibold">批量操作</h2>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Export Section */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
           <div className="mb-4 flex items-center gap-2">
             <Download className="text-blue-600" size={24} />
-            <h3 className="text-lg font-semibold">Export Students</h3>
+            <h3 className="text-lg font-semibold">导出学生数据</h3>
           </div>
           <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            Download all student records as a CSV file.
+            将所有学生记录下载为CSV文件。
           </p>
           <button
             onClick={handleExport}
             className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
           >
-            <Download size={16} /> Export CSV
+            <Download size={16} /> 导出CSV
           </button>
         </div>
 
@@ -102,10 +102,10 @@ export default function BatchPage() {
         <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
           <div className="mb-4 flex items-center gap-2">
             <Upload className="text-green-600" size={24} />
-            <h3 className="text-lg font-semibold">Import Students</h3>
+            <h3 className="text-lg font-semibold">导入学生数据</h3>
           </div>
           <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            Upload a CSV file to add or update students. Format: StudentID, Name, Gender, Major, Class, EnrollmentYear, Phone, Email
+            上传CSV文件以添加或更新学生。格式：学号、姓名、性别、专业、班级、入学年份、电话、邮箱
           </p>
           
           <div className="mb-4">
@@ -122,7 +122,7 @@ export default function BatchPage() {
             disabled={!importFile || loading}
             className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:opacity-50"
           >
-            <Upload size={16} /> {loading ? 'Importing…' : 'Import CSV'}
+            <Upload size={16} /> {loading ? '导入中…' : '导入CSV'}
           </button>
 
           {importResult && (
@@ -133,7 +133,7 @@ export default function BatchPage() {
                 ) : (
                   <AlertCircle className="text-yellow-600" size={16} />
                 )}
-                <span>Imported {importResult.imported} students</span>
+                <span>已导入 {importResult.imported} 名学生</span>
               </div>
               {importResult.errors.length > 0 && (
                 <div className="mt-2 max-h-32 overflow-y-auto text-xs text-gray-600 dark:text-gray-400">
@@ -151,10 +151,10 @@ export default function BatchPage() {
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         <div className="mb-4 flex items-center gap-2">
           <Trash2 className="text-red-600" size={24} />
-          <h3 className="text-lg font-semibold">Batch Delete Students</h3>
+          <h3 className="text-lg font-semibold">批量删除学生</h3>
         </div>
         <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-          Enter student IDs to delete (one per line or comma-separated).
+          输入要删除的学号（每行一个或用逗号分隔）。
         </p>
         
         <textarea
@@ -170,13 +170,13 @@ export default function BatchPage() {
           disabled={!deleteIds.trim() || loading}
           className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
         >
-          <Trash2 size={16} /> {loading ? 'Deleting…' : 'Delete Students'}
+          <Trash2 size={16} /> {loading ? '删除中…' : '删除学生'}
         </button>
 
         {deleteResult && (
           <div className={`mt-4 rounded-md p-3 ${deleteResult.errors.length === 0 ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'}`}>
             <p className="text-sm">
-              Deleted: {deleteResult.deleted} • Not found: {deleteResult.notFound}
+              已删除：{deleteResult.deleted} • 未找到：{deleteResult.notFound}
             </p>
             {deleteResult.errors.length > 0 && (
               <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
@@ -191,14 +191,14 @@ export default function BatchPage() {
 
       {/* CSV Template */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-        <h3 className="mb-2 font-semibold">CSV Template</h3>
+        <h3 className="mb-2 font-semibold">CSV模板</h3>
         <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-          Use this format for importing students:
+          导入学生时请使用以下格式：
         </p>
         <pre className="overflow-x-auto rounded-md bg-gray-100 p-3 text-xs dark:bg-gray-800">
-{`StudentID,Name,Gender,Major,Class,EnrollmentYear,Phone,Email
-20250001,John Doe,Male,Computer Science,CS-2025,2025,1234567890,john@example.com
-20250002,Jane Smith,Female,Mathematics,MATH-2024,2024,0987654321,jane@example.com`}
+{`学号,姓名,性别,专业,班级,入学年份,电话,邮箱
+20250001,张三,男,计算机科学,计科2025,2025,13800138001,zhangsan@example.com
+20250002,李四,女,数学,数学2024,2024,13800138002,lisi@example.com`}
         </pre>
       </div>
     </section>

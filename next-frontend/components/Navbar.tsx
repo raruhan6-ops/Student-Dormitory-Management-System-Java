@@ -32,24 +32,24 @@ export default function Navbar() {
   const isStaff = isAdmin || isManager
 
   const staffLinks = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/students', label: 'Students', icon: Users },
-    { href: '/buildings', label: 'Buildings', icon: Building2 },
-    { href: '/checkin', label: 'Check-In', icon: ClipboardCheck },
-    { href: '/applications', label: 'Applications', icon: FileStack },
-    { href: '/batch', label: 'Batch Ops', icon: ClipboardList },
-    { href: '/repairs', label: 'Repairs', icon: Wrench },
+    { href: '/dashboard', label: '仪表盘', icon: LayoutDashboard },
+    { href: '/students', label: '学生管理', icon: Users },
+    { href: '/buildings', label: '楼栋管理', icon: Building2 },
+    { href: '/checkin', label: '入住办理', icon: ClipboardCheck },
+    { href: '/applications', label: '申请审核', icon: FileStack },
+    { href: '/batch', label: '批量操作', icon: ClipboardList },
+    { href: '/repairs', label: '报修管理', icon: Wrench },
   ]
 
   const adminLinks = [
-    { href: '/admin/users', label: 'Users', icon: UserCog },
-    { href: '/admin/audit', label: 'Audit Log', icon: ClipboardList },
+    { href: '/admin/users', label: '用户管理', icon: UserCog },
+    { href: '/admin/audit', label: '操作日志', icon: ClipboardList },
   ]
 
   const studentLinks = [
-    { href: '/profile', label: 'My Profile', icon: User },
-    { href: '/apply-room', label: 'Apply Room', icon: BedDouble },
-    { href: '/repairs', label: 'Repairs', icon: Wrench },
+    { href: '/profile', label: '我的资料', icon: User },
+    { href: '/apply-room', label: '申请房间', icon: BedDouble },
+    { href: '/repairs', label: '报修服务', icon: Wrench },
   ]
 
   return (
@@ -61,8 +61,8 @@ export default function Navbar() {
             <GraduationCap className="h-5 w-5" />
           </div>
           <div className="hidden sm:block">
-            <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">UniDorm</span>
-            <span className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400">Management</span>
+            <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">宿舍管理</span>
+            <span className="ml-1 text-xs font-medium text-gray-500 dark:text-gray-400">系统</span>
           </div>
         </Link>
 
@@ -118,7 +118,7 @@ export default function Navbar() {
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">{username}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {role === 'Admin' ? 'Administrator' : role === 'DormManager' ? 'Dorm Manager' : 'Student'}
+                    {role === 'Admin' ? '系统管理员' : role === 'DormManager' ? '宿舍管理员' : '学生'}
                   </p>
                 </div>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
@@ -132,7 +132,7 @@ export default function Navbar() {
               href="/auth" 
               className="btn-primary"
             >
-              Sign In
+              登录
             </Link>
           )}
           <ThemeToggle />

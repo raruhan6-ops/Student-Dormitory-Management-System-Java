@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Building2, DoorOpen, BedDouble, Check, AlertCircle, RefreshCw, User, MapPin, Clock, Home, CheckCircle } from 'lucide-react'
 
+type BedInfo = {
+  bedID: number
+  bedNumber: string
+  status: string  // Available, Occupied, Reserved
+  isAvailable: boolean
+}
+
 type AvailableBed = {
   bedID: number
   bedNumber: string
@@ -16,6 +23,7 @@ type AvailableRoom = {
   capacity: number
   currentOccupancy: number
   availableSpots: number
+  allBeds: BedInfo[]
   availableBeds: AvailableBed[]
 }
 
@@ -79,7 +87,7 @@ export default function ApplyRoomPage() {
           setBuildings(data)
         }
       } catch (e) {
-        setMessage({ type: 'error', text: 'Failed to load data' })
+        setMessage({ type: 'error', text: '加载数据失败' })
       }
       setLoading(false)
     }
@@ -111,10 +119,10 @@ export default function ApplyRoomPage() {
       if (!res.ok) {
         // Handle concurrent booking conflict (409 status)
         if (res.status === 409) {
-          const errorMsg = data.error || 'This bed was just taken by another student.'
+          const errorMsg = data.error || '该床位刚被其他学生预定。'
           setMessage({ 
             type: 'error', 
-            text: `${errorMsg} Please select a different bed.`
+            text: `${errorMsg} 请选择其他床位。`
           })
           // Refresh the available rooms to get updated data
           setSelectedBed(null)
@@ -132,7 +140,7 @@ export default function ApplyRoomPage() {
 
       setMessage({ 
         type: 'success', 
-        text: `Application submitted! ${data.building} - Room ${data.room}, Bed ${data.bed}. Waiting for manager approval.` 
+        text: `申请已提交！${data.building} - ${data.room}室 ${data.bed}号床。等待管理员审批。` 
       })
       
       setTimeout(() => {
@@ -149,16 +157,21 @@ export default function ApplyRoomPage() {
   // Calculate stats
   const totalBuildings = buildings.length
   const totalAvailableBeds = buildings.reduce(
-    (acc, b) => acc + b.rooms.reduce((roomAcc, r) => roomAcc + r.availableBeds.length, 0),
+    (acc, b) => acc + b.rooms.reduce((roomAcc, r) => roomAcc + (r.availableBeds?.length || 0), 0),
     0
   )
+  const totalBeds = buildings.reduce(
+    (acc, b) => acc + b.rooms.reduce((roomAcc, r) => roomAcc + (r.allBeds?.length || r.availableBeds?.length || 0), 0),
+    0
+  )
+  const totalOccupiedBeds = totalBeds - totalAvailableBeds
 
   if (loading) {
     return (
       <div className="container-section">
         <div className="flex min-h-[400px] flex-col items-center justify-center">
           <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading available rooms...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">正在加载可用房间...</p>
         </div>
       </div>
     )
@@ -172,16 +185,16 @@ export default function ApplyRoomPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400">
               <User className="h-8 w-8" />
             </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Profile Required</h2>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">需要完善资料</h2>
             <p className="mt-3 text-gray-600 dark:text-gray-400">
-              You need to create your student profile before applying for a room.
+              申请房间前，您需要先创建学生资料。
             </p>
             <button
               onClick={() => router.push('/profile/setup')}
               className="btn-primary mt-6 w-full"
             >
               <User className="h-4 w-4" />
-              Create Profile
+              创建个人资料
             </button>
           </div>
         </div>
@@ -197,16 +210,16 @@ export default function ApplyRoomPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400">
               <Home className="h-8 w-8" />
             </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Room Already Assigned</h2>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">已分配房间</h2>
             <p className="mt-3 text-gray-600 dark:text-gray-400">
-              You already have a room assigned. Check your profile for details.
+              您已被分配房间。请在个人资料中查看详情。
             </p>
             <button
               onClick={() => router.push('/profile')}
               className="btn-primary mt-6 w-full"
             >
               <User className="h-4 w-4" />
-              View Profile
+              查看资料
             </button>
           </div>
         </div>
@@ -222,16 +235,16 @@ export default function ApplyRoomPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
               <Clock className="h-8 w-8" />
             </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">Application Pending</h2>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">申请待审核</h2>
             <p className="mt-3 text-gray-600 dark:text-gray-400">
-              You already have a pending room application. Please wait for manager approval.
+              您已有待审核的房间申请，请等待管理员审批。
             </p>
             <button
               onClick={() => router.push('/profile')}
               className="btn-primary mt-6 w-full"
             >
               <User className="h-4 w-4" />
-              View Application Status
+              查看申请状态
             </button>
           </div>
         </div>
@@ -248,23 +261,23 @@ export default function ApplyRoomPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
               <BedDouble className="h-5 w-5" />
             </div>
-            Apply for a Room
+            申请房间
           </h1>
           <p className="page-description mt-1">
-            Select an available bed from the buildings below
+            从下方楼栋中选择可用床位
           </p>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3">
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
         <div className="stat-card">
           <div className="stat-icon bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
             <p className="stat-value">{totalBuildings}</p>
-            <p className="stat-label">Buildings</p>
+            <p className="stat-label">楼栋数量</p>
           </div>
         </div>
         <div className="stat-card">
@@ -272,17 +285,26 @@ export default function ApplyRoomPage() {
             <BedDouble className="h-5 w-5" />
           </div>
           <div>
-            <p className="stat-value">{totalAvailableBeds}</p>
-            <p className="stat-label">Available Beds</p>
+            <p className="stat-value text-emerald-600 dark:text-emerald-400">{totalAvailableBeds}</p>
+            <p className="stat-label">可用床位</p>
           </div>
         </div>
-        <div className="stat-card col-span-2 md:col-span-1">
+        <div className="stat-card">
+          <div className="stat-icon bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            <BedDouble className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="stat-value text-red-600 dark:text-red-400">{totalOccupiedBeds}</p>
+            <p className="stat-label">已占用床位</p>
+          </div>
+        </div>
+        <div className="stat-card">
           <div className="stat-icon bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
             <DoorOpen className="h-5 w-5" />
           </div>
           <div>
             <p className="stat-value">{buildings.reduce((acc, b) => acc + b.rooms.length, 0)}</p>
-            <p className="stat-label">Rooms with Space</p>
+            <p className="stat-label">房间总数</p>
           </div>
         </div>
       </div>
@@ -303,9 +325,9 @@ export default function ApplyRoomPage() {
         <div className="card">
           <div className="empty-state py-12">
             <BedDouble className="empty-state-icon" />
-            <p className="empty-state-title">No Rooms Available</p>
+            <p className="empty-state-title">暂无可用房间</p>
             <p className="empty-state-description">
-              There are currently no available beds. Please check back later.
+              目前没有可用床位，请稍后再试。
             </p>
           </div>
         </div>
@@ -342,14 +364,14 @@ export default function ApplyRoomPage() {
                       <div className="mb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <DoorOpen className="h-4 w-4 text-gray-500" />
-                          <span className="font-medium text-gray-900 dark:text-white">Room {room.roomNumber}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">{room.roomNumber}室</span>
                         </div>
                         <span className="badge-info">{room.roomType}</span>
                       </div>
                       
                       <div className="mb-3">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Availability</span>
+                          <span className="text-gray-500">可用情况</span>
                           <span className="font-medium text-gray-900 dark:text-white">
                             {room.availableSpots} / {room.capacity}
                           </span>
@@ -362,22 +384,54 @@ export default function ApplyRoomPage() {
                         </div>
                       </div>
 
+                      {/* Legend */}
+                      <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-3 w-3 rounded border-2 border-emerald-500 bg-emerald-50"></div>
+                          <span className="text-gray-500">可用</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-3 w-3 rounded bg-red-500"></div>
+                          <span className="text-gray-500">已占用</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-3 w-3 rounded bg-amber-500"></div>
+                          <span className="text-gray-500">已预约</span>
+                        </div>
+                      </div>
+
+                      {/* All Beds Display */}
                       <div className="flex flex-wrap gap-2">
-                        {room.availableBeds.map((bed) => (
-                          <button
-                            key={bed.bedID}
-                            onClick={() => handleSelectBed(building, room, bed.bedID)}
-                            className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
-                              selectedBed === bed.bedID
-                                ? 'border-primary-500 bg-primary-500 text-white shadow-sm'
-                                : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:bg-primary-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-primary-900/20'
-                            }`}
-                          >
-                            <BedDouble className="h-4 w-4" />
-                            Bed {bed.bedNumber}
-                            {selectedBed === bed.bedID && <Check className="h-4 w-4" />}
-                          </button>
-                        ))}
+                        {(room.allBeds || room.availableBeds.map(b => ({ ...b, status: 'Available', isAvailable: true }))).map((bed) => {
+                          const isAvailable = bed.isAvailable || bed.status === 'Available'
+                          const isOccupied = bed.status === 'Occupied'
+                          const isReserved = bed.status === 'Reserved'
+                          const isSelected = selectedBed === bed.bedID
+                          
+                          return (
+                            <button
+                              key={bed.bedID}
+                              onClick={() => isAvailable && handleSelectBed(building, room, bed.bedID)}
+                              disabled={!isAvailable}
+                              title={isAvailable ? `选择 ${bed.bedNumber}号床` : `${bed.bedNumber}号床 ${bed.status === 'Occupied' ? '已占用' : '已预约'}`}
+                              className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                                isSelected
+                                  ? 'border-primary-500 bg-primary-500 text-white shadow-md ring-2 ring-primary-300'
+                                  : isOccupied
+                                  ? 'cursor-not-allowed border-red-300 bg-red-100 text-red-700 opacity-75 dark:border-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                  : isReserved
+                                  ? 'cursor-not-allowed border-amber-300 bg-amber-100 text-amber-700 opacity-75 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                  : 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-emerald-500 hover:bg-emerald-100 hover:shadow-sm dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/30'
+                              }`}
+                            >
+                              <BedDouble className={`h-4 w-4 ${isOccupied ? 'text-red-500' : isReserved ? 'text-amber-500' : ''}`} />
+                              {bed.bedNumber}号床
+                              {isSelected && <Check className="h-4 w-4" />}
+                              {isOccupied && <span className="ml-1 text-xs">(已占)</span>}
+                              {isReserved && <span className="ml-1 text-xs">(待审)</span>}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   ))}
@@ -397,11 +451,11 @@ export default function ApplyRoomPage() {
                 <BedDouble className="h-6 w-6" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Your Selection</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">您的选择</p>
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  {selectedBuilding.buildingName} → Room {selectedRoom.roomNumber} → Bed {
+                  {selectedBuilding.buildingName} → {selectedRoom.roomNumber}室 → {
                     selectedRoom.availableBeds.find(b => b.bedID === selectedBed)?.bedNumber
-                  }
+                  }号床
                 </p>
               </div>
             </div>
@@ -413,12 +467,12 @@ export default function ApplyRoomPage() {
               {applying ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  Submitting...
+                  提交中...
                 </>
               ) : (
                 <>
                   <Check className="h-4 w-4" />
-                  Confirm Application
+                  确认申请
                 </>
               )}
             </button>

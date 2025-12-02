@@ -82,7 +82,7 @@ export default function DashboardPage() {
       <div className="container-section">
         <div className="flex min-h-[400px] flex-col items-center justify-center">
           <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard data...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">正在加载仪表盘数据...</p>
         </div>
       </div>
     )
@@ -93,11 +93,11 @@ export default function DashboardPage() {
       <div className="container-section">
         <div className="flex min-h-[400px] flex-col items-center justify-center">
           <AlertCircle className="h-12 w-12 text-red-500" />
-          <p className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Failed to load dashboard</p>
+          <p className="mt-4 text-lg font-medium text-gray-900 dark:text-white">加载仪表盘失败</p>
           <p className="mt-1 text-gray-600 dark:text-gray-400">{error}</p>
           <button onClick={load} className="btn-primary mt-4">
             <RefreshCw className="h-4 w-4" />
-            Try Again
+            重试
           </button>
         </div>
       </div>
@@ -109,20 +109,20 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Dashboard</h1>
+          <h1 className="page-title">仪表盘</h1>
           <p className="page-description mt-1">
-            Overview of your dormitory management system
+            宿舍管理系统数据总览
           </p>
         </div>
         <div className="flex items-center gap-3">
           {lastUpdated && (
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Last updated: {lastUpdated.toLocaleTimeString()}
+              更新时间: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
           <button onClick={load} className="btn-secondary">
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            刷新
           </button>
         </div>
       </div>
@@ -131,29 +131,29 @@ export default function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard 
           icon={<Users className="h-6 w-6" />} 
-          label="Total Students" 
+          label="学生总数" 
           value={summary?.totalStudents ?? 0} 
           color="blue"
-          trend="+12% from last month"
+          trend="较上月+12%"
         />
         <StatCard 
           icon={<Building2 className="h-6 w-6" />} 
-          label="Buildings" 
+          label="楼栋数" 
           value={summary?.totalBuildings ?? 0} 
           color="emerald"
         />
         <StatCard 
           icon={<DoorOpen className="h-6 w-6" />} 
-          label="Total Rooms" 
+          label="房间总数" 
           value={summary?.totalRooms ?? 0} 
           color="purple"
         />
         <StatCard 
           icon={<Bed className="h-6 w-6" />} 
-          label="Bed Occupancy" 
+          label="床位使用" 
           value={`${summary?.occupiedBeds ?? 0} / ${summary?.totalBeds ?? 0}`} 
           color="amber"
-          subtext={`${summary?.occupancyRate ?? 0}% occupied`}
+          subtext={`入住率 ${summary?.occupancyRate ?? 0}%`}
         />
       </div>
 
@@ -164,7 +164,7 @@ export default function DashboardPage() {
             <CheckCircle className="h-5 w-5" />
           </div>
           <div>
-            <p className="stat-label">Available Beds</p>
+            <p className="stat-label">空闲床位</p>
             <p className="stat-value text-emerald-600 dark:text-emerald-400">{summary?.availableBeds ?? 0}</p>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function DashboardPage() {
             <Clock className="h-5 w-5" />
           </div>
           <div>
-            <p className="stat-label">Pending Repairs</p>
+            <p className="stat-label">待处理报修</p>
             <p className="stat-value text-amber-600 dark:text-amber-400">{summary?.pendingRepairs ?? 0}</p>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function DashboardPage() {
             <Wrench className="h-5 w-5" />
           </div>
           <div>
-            <p className="stat-label">In Progress</p>
+            <p className="stat-label">维修中</p>
             <p className="stat-value text-blue-600 dark:text-blue-400">{summary?.inProgressRepairs ?? 0}</p>
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-5 w-5" />
           </div>
           <div>
-            <p className="stat-label">Occupancy Rate</p>
+            <p className="stat-label">入住率</p>
             <p className="stat-value text-primary-600 dark:text-primary-400">{summary?.occupancyRate ?? 0}%</p>
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
         {/* Occupancy by Building */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Occupancy by Building</h3>
+            <h3 className="card-title">各楼栋入住情况</h3>
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={occupancyByBuilding} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
@@ -218,8 +218,8 @@ export default function DashboardPage() {
                 }} 
               />
               <Legend />
-              <Bar dataKey="occupied" name="Occupied" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="available" name="Available" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="occupied" name="已入住" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="available" name="空闲" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -227,7 +227,7 @@ export default function DashboardPage() {
         {/* Repairs by Status */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Repair Requests by Status</h3>
+            <h3 className="card-title">报修请求状态分布</h3>
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
@@ -266,7 +266,7 @@ export default function DashboardPage() {
         {/* Students by Major */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Students by Major (Top 8)</h3>
+            <h3 className="card-title">各专业学生分布 (前8名)</h3>
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={studentsByMajor.slice(0, 8)} layout="vertical" margin={{ top: 20, right: 30, left: 80, bottom: 5 }}>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
         {/* Gender Distribution */}
         <div className="card">
           <div className="card-header">
-            <h3 className="card-title">Gender Distribution</h3>
+            <h3 className="card-title">性别分布</h3>
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
@@ -329,7 +329,7 @@ export default function DashboardPage() {
       {/* Students by Year - Full Width */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title">Students by Enrollment Year</h3>
+          <h3 className="card-title">各入学年份学生分布</h3>
         </div>
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={studentsByYear} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>

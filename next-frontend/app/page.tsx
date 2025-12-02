@@ -18,56 +18,56 @@ export default function HomePage() {
   const features = [
     {
       icon: Building2,
-      title: 'Building Management',
-      description: 'Complete oversight of all dormitory buildings, floors, and room configurations.',
+      title: '楼栋管理',
+      description: '全面管理所有宿舍楼栋、楼层和房间配置信息。',
       color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
     },
     {
       icon: BedDouble,
-      title: 'Room Allocation',
-      description: 'Smart room assignment with real-time availability and conflict prevention.',
+      title: '房间分配',
+      description: '智能房间分配，实时查看空位，自动防止冲突。',
       color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
     },
     {
       icon: ClipboardCheck,
-      title: 'Check-In/Out',
-      description: 'Streamlined check-in and check-out processes with full history tracking.',
+      title: '入住/退房',
+      description: '便捷的入住和退房流程，完整的历史记录追踪。',
       color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
     },
     {
       icon: Wrench,
-      title: 'Repair Requests',
-      description: 'Submit and track maintenance requests with status updates.',
+      title: '报修服务',
+      description: '在线提交和追踪维修请求，实时状态更新。',
       color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
     },
     {
       icon: BarChart3,
-      title: 'Analytics Dashboard',
-      description: 'Real-time statistics on occupancy rates, demographics, and trends.',
+      title: '数据分析',
+      description: '实时统计入住率、学生分布和趋势分析。',
       color: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
     },
     {
       icon: Shield,
-      title: 'Role-Based Access',
-      description: 'Secure access control for admins, managers, and students.',
+      title: '权限管理',
+      description: '为管理员、宿管和学生提供安全的访问控制。',
       color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
     },
   ]
 
   const stats = [
-    { value: '10,000+', label: 'Students Managed' },
-    { value: '50+', label: 'Buildings' },
-    { value: '99.9%', label: 'Uptime' },
-    { value: '24/7', label: 'Support' },
+    { value: '10,000+', label: '学生管理' },
+    { value: '50+', label: '宿舍楼栋' },
+    { value: '99.9%', label: '系统稳定性' },
+    { value: '24/7', label: '技术支持' },
   ]
 
   const benefits = [
-    'Real-time room availability tracking',
-    'Automated email notifications',
-    'Comprehensive audit logging',
-    'Batch operations support',
-    'Data export capabilities',
-    'Mobile-responsive design',
+    '实时房间空位查询',
+    '自动邮件通知',
+    '完整操作日志',
+    '批量操作支持',
+    '数据导出功能',
+    '移动端适配',
   ]
 
   return (
@@ -82,19 +82,19 @@ export default function HomePage() {
             {/* Badge */}
             <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm">
               <GraduationCap className="h-4 w-4" />
-              University Dormitory Management System
+              高校学生宿舍管理系统
             </div>
 
             {/* Heading */}
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Modern Dormitory
-              <span className="block text-primary-200">Management Made Simple</span>
+              现代化宿舍管理
+              <span className="block text-primary-200">简单高效</span>
             </h1>
 
             {/* Subheading */}
             <p className="mx-auto mt-6 max-w-2xl text-lg text-primary-100 sm:text-xl">
-              A comprehensive platform for managing student housing, room assignments, 
-              and facility maintenance. Built for universities that care about efficiency.
+              一站式学生住宿管理平台，涵盖房间分配、设施维护等功能。
+              专为追求效率的高校打造。
             </p>
 
             {/* CTA Buttons */}
@@ -103,14 +103,14 @@ export default function HomePage() {
                 href="/auth"
                 className="group inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-primary-600 shadow-lg transition-all hover:bg-primary-50 hover:shadow-xl"
               >
-                Get Started
+                立即开始
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="#features"
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 px-8 py-4 text-base font-semibold text-white transition-all hover:bg-white/10"
               >
-                Explore Features
+                探索功能
               </Link>
             </div>
           </div>
@@ -148,11 +148,11 @@ export default function HomePage() {
         <div className="container">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              Everything you need to manage
-              <span className="block text-primary-600 dark:text-primary-400">student housing</span>
+              学生住宿管理
+              <span className="block text-primary-600 dark:text-primary-400">所需的一切功能</span>
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-              A complete suite of tools designed for modern university dormitory management.
+              为现代高校宿舍管理设计的完整工具套件。
             </p>
           </div>
 
@@ -183,12 +183,12 @@ export default function HomePage() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                Built for efficiency,
-                <span className="block text-primary-600 dark:text-primary-400">designed for scale</span>
+                高效设计，
+                <span className="block text-primary-600 dark:text-primary-400">灵活扩展</span>
               </h2>
               <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-                Our platform is designed to handle the complexities of university housing management 
-                while providing an intuitive experience for all users.
+                我们的平台专为处理高校住宿管理的复杂需求而设计，
+                同时为所有用户提供直观的使用体验。
               </p>
               <ul className="mt-8 space-y-4">
                 {benefits.map((benefit, index) => (
@@ -204,8 +204,8 @@ export default function HomePage() {
                 <div className="flex h-full flex-col items-center justify-center text-white">
                   <GraduationCap className="h-24 w-24 opacity-20" />
                   <div className="mt-4 text-center">
-                    <div className="text-4xl font-bold">UniDorm</div>
-                    <div className="mt-2 text-primary-200">Management System</div>
+                    <div className="text-4xl font-bold">宿舍管理</div>
+                    <div className="mt-2 text-primary-200">系统平台</div>
                   </div>
                 </div>
               </div>
@@ -219,10 +219,10 @@ export default function HomePage() {
         <div className="container">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              For every role in your institution
+              满足各类角色需求
             </h2>
             <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-              Tailored experiences for administrators, managers, and students.
+              为管理员、宿管和学生量身定制的使用体验。
             </p>
           </div>
 
@@ -232,14 +232,14 @@ export default function HomePage() {
               <div className="inline-flex rounded-xl bg-red-100 p-3 text-red-600 dark:bg-red-900/30 dark:text-red-400">
                 <Shield className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">Administrators</h3>
+              <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">系统管理员</h3>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Full system control with user management, audit logs, and system configuration.
+                拥有用户管理、审计日志和系统配置的完整控制权限。
               </p>
               <ul className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li>• User account management</li>
-                <li>• System audit logs</li>
-                <li>• Complete data access</li>
+                <li>• 用户账户管理</li>
+                <li>• 系统操作日志</li>
+                <li>• 完整数据访问</li>
               </ul>
             </div>
 
@@ -248,14 +248,14 @@ export default function HomePage() {
               <div className="inline-flex rounded-xl bg-blue-100 p-3 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                 <Users className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">Dorm Managers</h3>
+              <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">宿舍管理员</h3>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Day-to-day operations management including check-ins, applications, and repairs.
+                日常运营管理，包括入住办理、申请审核和报修处理。
               </p>
               <ul className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li>• Room application approval</li>
-                <li>• Check-in/out management</li>
-                <li>• Repair request handling</li>
+                <li>• 房间申请审批</li>
+                <li>• 入住/退房管理</li>
+                <li>• 报修请求处理</li>
               </ul>
             </div>
 
@@ -264,14 +264,14 @@ export default function HomePage() {
               <div className="inline-flex rounded-xl bg-emerald-100 p-3 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
                 <GraduationCap className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">Students</h3>
+              <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">学生</h3>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Self-service portal for room applications, profile management, and repair requests.
+                自助服务门户，支持房间申请、个人资料管理和报修请求。
               </p>
               <ul className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li>• Apply for rooms</li>
-                <li>• View assignments</li>
-                <li>• Submit repair requests</li>
+                <li>• 申请房间</li>
+                <li>• 查看分配信息</li>
+                <li>• 提交报修请求</li>
               </ul>
             </div>
           </div>
@@ -283,17 +283,17 @@ export default function HomePage() {
         <div className="container">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Ready to modernize your dormitory management?
+              准备好升级您的宿舍管理系统了吗？
             </h2>
             <p className="mt-4 text-lg text-primary-100">
-              Join universities worldwide who trust UniDorm for their student housing needs.
+              加入全国众多信赖本系统的高校，开启智能化宿舍管理。
             </p>
             <div className="mt-8">
               <Link
                 href="/auth"
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-primary-600 shadow-lg transition-all hover:bg-primary-50 hover:shadow-xl"
               >
-                Sign In to Get Started
+                登录开始使用
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
@@ -309,10 +309,10 @@ export default function HomePage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-500 text-white">
                 <GraduationCap className="h-4 w-4" />
               </div>
-              <span className="font-semibold text-gray-900 dark:text-white">UniDorm</span>
+              <span className="font-semibold text-gray-900 dark:text-white">宿舍管理系统</span>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              © {new Date().getFullYear()} UniDorm Management System. All rights reserved.
+              © {new Date().getFullYear()} 学生宿舍管理系统 版权所有
             </p>
           </div>
         </div>

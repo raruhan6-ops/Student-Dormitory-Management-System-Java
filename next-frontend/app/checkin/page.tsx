@@ -75,30 +75,30 @@ export default function CheckInPage() {
       })
       const text = await res.text()
       if (!res.ok) throw new Error(text)
-      setMessage({ type: 'success', text: 'Check-in successful!' })
+      setMessage({ type: 'success', text: '入住成功！' })
       setSelectedStudent(null)
       setSelectedBed(null)
       load()
     } catch (e: unknown) {
       const error = e as Error
-      setMessage({ type: 'error', text: error?.message || 'Check-in failed' })
+      setMessage({ type: 'error', text: error?.message || '入住失败' })
     }
     setProcessing(false)
   }
 
   const handleCheckOut = async (studentId: string) => {
-    if (!confirm('Check out this student?')) return
+    if (!confirm('确定为该学生办理退住？')) return
     setProcessing(true)
     setMessage(null)
     try {
       const res = await fetch(`/api/dormitories/check-out/${studentId}`, { method: 'POST' })
       const text = await res.text()
       if (!res.ok) throw new Error(text)
-      setMessage({ type: 'success', text: 'Check-out successful!' })
+      setMessage({ type: 'success', text: '退住成功！' })
       load()
     } catch (e: unknown) {
       const error = e as Error
-      setMessage({ type: 'error', text: error?.message || 'Check-out failed' })
+      setMessage({ type: 'error', text: error?.message || '退住失败' })
     }
     setProcessing(false)
   }
@@ -111,7 +111,7 @@ export default function CheckInPage() {
       <div className="container-section">
         <div className="flex min-h-[400px] flex-col items-center justify-center">
           <RefreshCw className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading check-in data...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">正在加载入住数据...</p>
         </div>
       </div>
     )
@@ -126,10 +126,10 @@ export default function CheckInPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
               <UserPlus className="h-5 w-5" />
             </div>
-            Check-In / Check-Out
+            入住 / 退住管理
           </h1>
           <p className="page-description mt-1">
-            Manage student room assignments and bed allocations
+            管理学生房间分配和床位安排
           </p>
         </div>
       </div>
@@ -142,7 +142,7 @@ export default function CheckInPage() {
           </div>
           <div>
             <p className="stat-value">{checkedInStudents.length}</p>
-            <p className="stat-label">Checked In</p>
+            <p className="stat-label">已入住</p>
           </div>
         </div>
         <div className="stat-card">
@@ -151,7 +151,7 @@ export default function CheckInPage() {
           </div>
           <div>
             <p className="stat-value">{unassignedStudents.length}</p>
-            <p className="stat-label">Unassigned</p>
+            <p className="stat-label">未分配</p>
           </div>
         </div>
         <div className="stat-card">
@@ -160,7 +160,7 @@ export default function CheckInPage() {
           </div>
           <div>
             <p className="stat-value">{buildings.length}</p>
-            <p className="stat-label">Buildings</p>
+            <p className="stat-label">楼栋数</p>
           </div>
         </div>
         <div className="stat-card">
@@ -169,7 +169,7 @@ export default function CheckInPage() {
           </div>
           <div>
             <p className="stat-value">{students.length}</p>
-            <p className="stat-label">Total Students</p>
+            <p className="stat-label">学生总数</p>
           </div>
         </div>
       </div>
@@ -192,17 +192,17 @@ export default function CheckInPage() {
           <div className="card-header">
             <h3 className="card-title flex items-center gap-2">
               <UserPlus className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              Check-In Student
+              学生入住
             </h3>
           </div>
 
           {/* Student Search */}
           <div className="mb-4">
-            <label className="input-label">Search Student</label>
+            <label className="input-label">搜索学生</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
-                placeholder="Search by ID or name…"
+                placeholder="按学号或姓名搜索..."
                 className="input pl-10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -231,7 +231,7 @@ export default function CheckInPage() {
                 </div>
               ))}
               {filteredStudents.filter((s) => !s.dormBuilding).length === 0 && (
-                <p className="px-4 py-3 text-sm text-gray-500">No unassigned students found.</p>
+                <p className="px-4 py-3 text-sm text-gray-500">没有未分配的学生。</p>
               )}
             </div>
           )}
@@ -260,14 +260,14 @@ export default function CheckInPage() {
             <div>
               <label className="input-label flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5" />
-                Building
+                楼栋
               </label>
               <select
                 className="input"
                 value={selectedBuilding ?? ''}
                 onChange={(e) => setSelectedBuilding(Number(e.target.value) || null)}
               >
-                <option value="">Select a building...</option>
+                <option value="">请选择楼栋...</option>
                 {buildings.map((b) => <option key={b.buildingID} value={b.buildingID}>{b.buildingName}</option>)}
               </select>
             </div>
@@ -275,7 +275,7 @@ export default function CheckInPage() {
             <div>
               <label className="input-label flex items-center gap-1.5">
                 <DoorOpen className="h-3.5 w-3.5" />
-                Room
+                房间
               </label>
               <select
                 className="input"
@@ -283,10 +283,10 @@ export default function CheckInPage() {
                 onChange={(e) => setSelectedRoom(Number(e.target.value) || null)}
                 disabled={!selectedBuilding}
               >
-                <option value="">Select a room...</option>
+                <option value="">请选择房间...</option>
                 {rooms.map((r) => (
                   <option key={r.roomID} value={r.roomID}>
-                    Room {r.roomNumber} ({r.currentOccupancy}/{r.capacity} occupied)
+                    {r.roomNumber}室 ({r.currentOccupancy}/{r.capacity} 已入住)
                   </option>
                 ))}
               </select>
@@ -295,7 +295,7 @@ export default function CheckInPage() {
             <div>
               <label className="input-label flex items-center gap-1.5">
                 <BedDouble className="h-3.5 w-3.5" />
-                Bed
+                床位
               </label>
               <select
                 className="input"
@@ -303,11 +303,11 @@ export default function CheckInPage() {
                 onChange={(e) => setSelectedBed(Number(e.target.value) || null)}
                 disabled={!selectedRoom}
               >
-                <option value="">Select a bed...</option>
-                {availableBeds.map((b) => <option key={b.bedID} value={b.bedID}>Bed #{b.bedNumber}</option>)}
+                <option value="">请选择床位...</option>
+                {availableBeds.map((b) => <option key={b.bedID} value={b.bedID}>{b.bedNumber}号床</option>)}
               </select>
               {selectedRoom && availableBeds.length === 0 && (
-                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">No available beds in this room.</p>
+                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">该房间没有可用床位。</p>
               )}
             </div>
           </div>
@@ -320,12 +320,12 @@ export default function CheckInPage() {
             {processing ? (
               <>
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                Processing...
+                处理中...
               </>
             ) : (
               <>
                 <UserPlus className="h-4 w-4" />
-                Assign Bed (Check-In)
+                分配床位（入住）
               </>
             )}
           </button>
@@ -336,16 +336,16 @@ export default function CheckInPage() {
           <div className="card-header">
             <h3 className="card-title flex items-center gap-2">
               <LogOut className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              Currently Checked-In
+              当前入住学生
             </h3>
-            <span className="badge-info">{checkedInStudents.length} students</span>
+            <span className="badge-info">{checkedInStudents.length} 名学生</span>
           </div>
           
           {checkedInStudents.length === 0 ? (
             <div className="empty-state py-8">
               <Home className="empty-state-icon" />
-              <p className="empty-state-title">No students checked in</p>
-              <p className="empty-state-description">Students with room assignments will appear here.</p>
+              <p className="empty-state-title">暂无入住学生</p>
+              <p className="empty-state-description">已分配房间的学生将显示在此。</p>
             </div>
           ) : (
             <div className="max-h-[400px] space-y-2 overflow-y-auto">
@@ -365,12 +365,12 @@ export default function CheckInPage() {
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <DoorOpen className="h-3 w-3" />
-                          Room {s.roomNumber}
+                          {s.roomNumber}室
                         </span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
                           <BedDouble className="h-3 w-3" />
-                          Bed {s.bedNumber}
+                          {s.bedNumber}号床
                         </span>
                       </div>
                     </div>
@@ -381,7 +381,7 @@ export default function CheckInPage() {
                     className="btn-ghost text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
                   >
                     <LogOut className="h-4 w-4" />
-                    Check Out
+                    退住
                   </button>
                 </div>
               ))}

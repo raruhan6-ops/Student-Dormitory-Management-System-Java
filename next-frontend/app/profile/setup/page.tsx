@@ -81,7 +81,7 @@ export default function ProfileSetupPage() {
         throw new Error(error)
       }
 
-      setMessage({ type: 'success', text: 'Profile saved successfully!' })
+      setMessage({ type: 'success', text: '资料保存成功！' })
       setHasProfile(true)
       
       // Redirect to profile page after a short delay
@@ -89,7 +89,7 @@ export default function ProfileSetupPage() {
         router.push('/profile')
       }, 1500)
     } catch (e: any) {
-      setMessage({ type: 'error', text: e.message || 'Failed to save profile' })
+      setMessage({ type: 'error', text: e.message || '保存资料失败' })
     } finally {
       setSaving(false)
     }
@@ -98,7 +98,7 @@ export default function ProfileSetupPage() {
   if (loading) {
     return (
       <section className="container-section">
-        <p>Loading...</p>
+        <p>加载中...</p>
       </section>
     )
   }
@@ -110,12 +110,12 @@ export default function ProfileSetupPage() {
           <User className="h-8 w-8 text-blue-600" />
           <div>
             <h2 className="text-2xl font-semibold">
-              {hasProfile ? 'Edit Your Profile' : 'Create Your Profile'}
+              {hasProfile ? '编辑个人资料' : '创建个人资料'}
             </h2>
             <p className="text-sm text-gray-500">
               {hasProfile 
-                ? 'Update your personal information below' 
-                : 'Fill in your details to complete your student registration'}
+                ? '在下方更新您的个人信息' 
+                : '填写您的详细信息以完成学生注册'}
             </p>
           </div>
         </div>
@@ -129,25 +129,25 @@ export default function ProfileSetupPage() {
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 p-6 dark:border-gray-700">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Student ID *</label>
+              <label className="mb-1 block text-sm font-medium">学号 *</label>
               <input
                 required
                 disabled={hasProfile} // Can't change student ID after creation
-                placeholder="e.g., 20250001"
+                placeholder="例如：20250001"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:disabled:bg-gray-800"
                 value={form.studentID}
                 onChange={(e) => setForm({ ...form, studentID: e.target.value })}
               />
               {hasProfile && (
-                <p className="mt-1 text-xs text-gray-500">Student ID cannot be changed</p>
+                <p className="mt-1 text-xs text-gray-500">学号创建后无法修改</p>
               )}
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Full Name *</label>
+              <label className="mb-1 block text-sm font-medium">姓名 *</label>
               <input
                 required
-                placeholder="Enter your full name"
+                placeholder="请输入您的姓名"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -155,23 +155,23 @@ export default function ProfileSetupPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Gender *</label>
+              <label className="mb-1 block text-sm font-medium">性别 *</label>
               <select
                 required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                 value={form.gender}
                 onChange={(e) => setForm({ ...form, gender: e.target.value })}
               >
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
+                <option value="Male">男</option>
+                <option value="Female">女</option>
               </select>
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Major *</label>
+              <label className="mb-1 block text-sm font-medium">专业 *</label>
               <input
                 required
-                placeholder="e.g., Computer Science"
+                placeholder="例如：计算机科学"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                 value={form.major}
                 onChange={(e) => setForm({ ...form, major: e.target.value })}
@@ -179,9 +179,9 @@ export default function ProfileSetupPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Class</label>
+              <label className="mb-1 block text-sm font-medium">班级</label>
               <input
-                placeholder="e.g., CS-2025-A"
+                placeholder="例如：计科2025-A班"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                 value={form.studentClass}
                 onChange={(e) => setForm({ ...form, studentClass: e.target.value })}
@@ -189,7 +189,7 @@ export default function ProfileSetupPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Enrollment Year *</label>
+              <label className="mb-1 block text-sm font-medium">入学年份 *</label>
               <input
                 type="number"
                 required
@@ -202,10 +202,10 @@ export default function ProfileSetupPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Phone Number</label>
+              <label className="mb-1 block text-sm font-medium">电话号码</label>
               <input
                 type="tel"
-                placeholder="e.g., 1234567890"
+                placeholder="例如：13812345678"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -213,10 +213,10 @@ export default function ProfileSetupPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Email</label>
+              <label className="mb-1 block text-sm font-medium">邮箱</label>
               <input
                 type="email"
-                placeholder="e.g., student@example.com"
+                placeholder="例如：student@example.com"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -231,7 +231,7 @@ export default function ProfileSetupPage() {
               className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
             >
               <Save size={16} />
-              {saving ? 'Saving...' : 'Save Profile'}
+              {saving ? '保存中...' : '保存资料'}
             </button>
             
             {hasProfile && (
@@ -240,7 +240,7 @@ export default function ProfileSetupPage() {
                 onClick={() => router.push('/profile')}
                 className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
               >
-                Cancel
+                取消
               </button>
             )}
           </div>
@@ -248,7 +248,7 @@ export default function ProfileSetupPage() {
 
         {!hasProfile && (
           <p className="mt-4 text-center text-sm text-gray-500">
-            After creating your profile, you can apply for a room.
+            创建资料后，您可以申请宿舍房间。
           </p>
         )}
       </div>
