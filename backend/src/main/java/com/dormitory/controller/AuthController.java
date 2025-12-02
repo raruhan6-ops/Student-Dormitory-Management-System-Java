@@ -3,6 +3,7 @@ package com.dormitory.controller;
 import com.dormitory.dto.LoginRequest;
 import com.dormitory.dto.LoginResponse;
 import com.dormitory.dto.ChangePasswordRequest;
+import com.dormitory.dto.ResetPasswordRequest;
 import com.dormitory.entity.UserAccount;
 import com.dormitory.entity.Student;
 import com.dormitory.repository.StudentRepository;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,6 +28,11 @@ public class AuthController {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @GetMapping("/users")
+    public List<UserAccount> getAllUsers() {
+        return userAccountRepository.findAll();
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -70,6 +77,17 @@ public class AuthController {
         user.setPasswordHash(hashPassword(request.getNewPassword()));
         userAccountRepository.save(user);
         return ResponseEntity.ok("Password changed successfully");
+    }
+
+    @PostMapping("/admin/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        UserAccount user = userAccountRepository.findByUsername(request.getUsername()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        user.setPasswordHash(hashPassword(request.getNewPassword()));
+        userAccountRepository.save(user);
+        return ResponseEntity.ok("Password reset successfully");
     }
 
     private String hashPassword(String password) {

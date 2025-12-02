@@ -24,6 +24,7 @@ const StudentList = ({ showNotification }) => {
         enrollmentYear: new Date().getFullYear(), phone: '', 
         dormBuilding: '', roomNumber: '', bedNumber: ''
     });
+    const [formErrors, setFormErrors] = useState({});
 
     const columns = [
         { field: 'studentID', headerName: '学号 (ID)', width: 130 },
@@ -81,12 +82,14 @@ const StudentList = ({ showNotification }) => {
             enrollmentYear: new Date().getFullYear(), phone: '', 
             dormBuilding: '', roomNumber: '', bedNumber: ''
         });
+        setFormErrors({});
         setOpenDialog(true);
     };
 
     const handleOpenEdit = (student) => {
         setIsEdit(true);
         setCurrentStudent(student);
+        setFormErrors({});
         setOpenDialog(true);
     };
 
@@ -97,9 +100,30 @@ const StudentList = ({ showNotification }) => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setCurrentStudent({ ...currentStudent, [name]: value });
+        // Clear error when user types
+        if (formErrors[name]) {
+            setFormErrors({ ...formErrors, [name]: '' });
+        }
+    };
+
+    const validateForm = () => {
+        const errors = {};
+        if (!currentStudent.studentID) errors.studentID = "Student ID is required";
+        if (!currentStudent.name) errors.name = "Name is required";
+        if (!currentStudent.enrollmentYear) errors.enrollmentYear = "Enrollment Year is required";
+        else if (currentStudent.enrollmentYear < 2000 || currentStudent.enrollmentYear > 2100) errors.enrollmentYear = "Invalid Year";
+        
+        if (currentStudent.phone && !/^\d+$/.test(currentStudent.phone)) {
+            errors.phone = "Phone must contain only digits";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     const handleSave = async () => {
+        if (!validateForm()) return;
+
         try {
             if (isEdit) {
                 await axios.put(`/api/students/${currentStudent.studentID}`, currentStudent);
@@ -194,6 +218,8 @@ const StudentList = ({ showNotification }) => {
                                 value={currentStudent.studentID}
                                 onChange={handleInputChange}
                                 disabled={isEdit} // ID cannot be changed when editing
+                                error={!!formErrors.studentID}
+                                helperText={formErrors.studentID}
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -203,6 +229,8 @@ const StudentList = ({ showNotification }) => {
                                 fullWidth
                                 value={currentStudent.name}
                                 onChange={handleInputChange}
+                                error={!!formErrors.name}
+                                helperText={formErrors.name}
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -245,6 +273,8 @@ const StudentList = ({ showNotification }) => {
                                 fullWidth
                                 value={currentStudent.enrollmentYear}
                                 onChange={handleInputChange}
+                                error={!!formErrors.enrollmentYear}
+                                helperText={formErrors.enrollmentYear}
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -254,6 +284,8 @@ const StudentList = ({ showNotification }) => {
                                 fullWidth
                                 value={currentStudent.phone}
                                 onChange={handleInputChange}
+                                error={!!formErrors.phone}
+                                helperText={formErrors.phone}
                             />
                         </Grid>
                         <Grid item xs={12}>

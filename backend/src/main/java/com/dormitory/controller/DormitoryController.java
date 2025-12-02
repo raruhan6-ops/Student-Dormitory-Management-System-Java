@@ -116,6 +116,24 @@ public class DormitoryController {
         }).orElse(null);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBuilding(@PathVariable Integer id) {
+        if (!buildingRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        // Check if building has rooms
+        List<Room> rooms = roomRepository.findAll().stream()
+                .filter(room -> room.getBuildingID().equals(id))
+                .collect(Collectors.toList());
+        
+        if (!rooms.isEmpty()) {
+            return ResponseEntity.badRequest().body("Cannot delete building with existing rooms. Please delete rooms first.");
+        }
+
+        buildingRepository.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
+
     // --- Room Management ---
 
     @PostMapping("/{buildingId}/rooms")
@@ -126,6 +144,27 @@ public class DormitoryController {
             room.setCurrentOccupancy(0);
         }
         return roomRepository.save(room);
+    }
+
+    @DeleteMapping("/rooms/{id}")
+    public ResponseEntity<?> deleteRoom(@PathVariable Integer id) {
+        if (!roomRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        // Check if room has occupied beds
+        List<Bed> beds = bedRepository.findAll().stream()
+                .filter(bed -> bed.getRoomID().equals(id))
+                .collect(Collectors.toList());
+        
+        boolean hasOccupiedBeds = beds.stream().anyMatch(bed -> "Occupied".equalsIgnoreCase(bed.getStatus()));
+        if (hasOccupiedBeds) {
+            return ResponseEntity.badRequest().body("Cannot delete room with occupied beds.");
+        }
+
+        // Delete beds first
+        bedRepository.deleteAll(beds);
+        roomRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
     // --- Check-In / Check-Out ---

@@ -11,7 +11,9 @@ import RepairRequestList from './components/RepairRequestList'
 import MyDorm from './components/MyDorm'
 import Dashboard from './components/Dashboard'
 import Login from './components/Login'
+import UserManagement from './components/UserManagement'
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import PeopleIcon from '@mui/icons-material/People';
 import axios from 'axios';
 
 const theme = createTheme({
@@ -125,6 +127,10 @@ function App() {
 
     if (user.role === 'DormManager' || user.role === 'Admin') {
       tabs.push({ label: "Dormitory Management", icon: <ApartmentIcon />, component: <DormitoryList showNotification={showNotification} /> });
+    }
+
+    if (user.role === 'Admin') {
+      tabs.push({ label: "User Management", icon: <PeopleIcon />, component: <UserManagement showNotification={showNotification} /> });
     }
 
     tabs.push({ label: "Repair Requests", icon: <BuildIcon />, component: <RepairRequestList showNotification={showNotification} user={user} /> });

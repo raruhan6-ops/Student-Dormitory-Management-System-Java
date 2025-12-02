@@ -9,6 +9,7 @@ import {
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import HotelIcon from '@mui/icons-material/Hotel';
+import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -97,6 +98,25 @@ const DormitoryList = ({ showNotification, studentMode = false, currentUser = nu
         }
     };
 
+    const handleDeleteBuilding = async (e, id) => {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to delete this building? It must be empty (no rooms).')) {
+            try {
+                await axios.delete(`/api/dormitories/${id}`);
+                showNotification('Building deleted successfully!', 'success');
+                if (selectedBuilding?.buildingID === id) {
+                    setSelectedBuilding(null);
+                    setRooms([]);
+                    setBeds([]);
+                }
+                fetchBuildings();
+            } catch (error) {
+                console.error('Error deleting building:', error);
+                showNotification(error.response?.data || 'Failed to delete building.', 'error');
+            }
+        }
+    };
+
     // --- Room Management ---
     const handleAddRoom = async () => {
         if (!selectedBuilding) return;
@@ -110,6 +130,24 @@ const DormitoryList = ({ showNotification, studentMode = false, currentUser = nu
         } catch (error) {
             console.error('Error adding room:', error);
             showNotification('Failed to add room.', 'error');
+        }
+    };
+
+    const handleDeleteRoom = async (e, id) => {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to delete this room? All beds will be removed. Room must be empty of students.')) {
+            try {
+                await axios.delete(`/api/dormitories/rooms/${id}`);
+                showNotification('Room deleted successfully!', 'success');
+                if (selectedRoom?.roomID === id) {
+                    setSelectedRoom(null);
+                    setBeds([]);
+                }
+                handleBuildingClick(selectedBuilding);
+            } catch (error) {
+                console.error('Error deleting room:', error);
+                showNotification(error.response?.data || 'Failed to delete room.', 'error');
+            }
         }
     };
 
@@ -235,6 +273,16 @@ const DormitoryList = ({ showNotification, studentMode = false, currentUser = nu
                                                 primary={building.buildingName} 
                                                 secondary={building.location} 
                                             />
+                                            {!studentMode && (
+                                                <IconButton 
+                                                    edge="end" 
+                                                    aria-label="delete" 
+                                                    onClick={(e) => handleDeleteBuilding(e, building.buildingID)}
+                                                    size="small"
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            )}
                                         </ListItemButton>
                                         <Divider variant="inset" component="li" />
                                     </React.Fragment>
@@ -284,7 +332,18 @@ const DormitoryList = ({ showNotification, studentMode = false, currentUser = nu
                                                     size="small" 
                                                     variant="outlined" 
                                                     color="default" 
+                                                    sx={{ mr: 1 }}
                                                 />
+                                                {!studentMode && (
+                                                    <IconButton 
+                                                        edge="end" 
+                                                        aria-label="delete" 
+                                                        onClick={(e) => handleDeleteRoom(e, room.roomID)}
+                                                        size="small"
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                )}
                                             </ListItemButton>
                                             <Divider variant="inset" component="li" />
                                         </React.Fragment>

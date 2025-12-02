@@ -48,34 +48,59 @@ const MyDorm = ({ user, showNotification }) => {
         return (
             <Box sx={{ mt: 3 }}>
                 <Typography variant="h5" gutterBottom>
-                    My Dormitory
+                    My Profile & Dormitory
                 </Typography>
-                <Card elevation={3} sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-                    <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                        <HomeIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                        <Typography variant="h4" gutterBottom>
-                            {studentInfo.dormBuilding}
-                        </Typography>
-                        <Grid container spacing={2} sx={{ mt: 2 }}>
-                            <Grid item xs={6}>
-                                <Typography variant="subtitle1" color="text.secondary">
-                                    Room Number
+                <Grid container spacing={3}>
+                    {/* Profile Card */}
+                    <Grid item xs={12} md={6}>
+                        <Card elevation={3} sx={{ height: '100%' }}>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom color="primary">
+                                    Student Profile
                                 </Typography>
-                                <Typography variant="h6">
-                                    {studentInfo.roomNumber}
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="body1"><strong>Name:</strong> {studentInfo.name}</Typography>
+                                    <Typography variant="body1"><strong>Student ID:</strong> {studentInfo.studentID}</Typography>
+                                    <Typography variant="body1"><strong>Gender:</strong> {studentInfo.gender}</Typography>
+                                    <Typography variant="body1"><strong>Major:</strong> {studentInfo.major}</Typography>
+                                    <Typography variant="body1"><strong>Class:</strong> {studentInfo.studentClass}</Typography>
+                                    <Typography variant="body1"><strong>Phone:</strong> {studentInfo.phone}</Typography>
+                                    <Typography variant="body1"><strong>Enrollment Year:</strong> {studentInfo.enrollmentYear}</Typography>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Dorm Card */}
+                    <Grid item xs={12} md={6}>
+                        <Card elevation={3} sx={{ height: '100%', textAlign: 'center', py: 4 }}>
+                            <CardContent>
+                                <HomeIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+                                <Typography variant="h4" gutterBottom>
+                                    {studentInfo.dormBuilding}
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Typography variant="subtitle1" color="text.secondary">
-                                    Bed Number
-                                </Typography>
-                                <Typography variant="h6">
-                                    {studentInfo.bedNumber}
-                                </Typography>
-                            </Grid>
-                        </Grid>
-                    </CardContent>
-                </Card>
+                                <Grid container spacing={2} sx={{ mt: 2 }}>
+                                    <Grid item xs={6}>
+                                        <Typography variant="subtitle1" color="text.secondary">
+                                            Room Number
+                                        </Typography>
+                                        <Typography variant="h6">
+                                            {studentInfo.roomNumber}
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Typography variant="subtitle1" color="text.secondary">
+                                            Bed Number
+                                        </Typography>
+                                        <Typography variant="h6">
+                                            {studentInfo.bedNumber}
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
             </Box>
         );
     }
