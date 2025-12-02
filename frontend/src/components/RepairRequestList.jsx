@@ -9,22 +9,26 @@ import BuildIcon from '@mui/icons-material/Build';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
 
-const RepairRequestList = ({ showNotification }) => {
+const RepairRequestList = ({ showNotification, user }) => {
     const [requests, setRequests] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [newRequest, setNewRequest] = useState({
         roomID: '',
-        submitterStudentID: '',
+        submitterStudentID: user?.relatedStudentID || '',
         description: ''
     });
 
     useEffect(() => {
         fetchRequests();
-    }, []);
+    }, [user]);
 
     const fetchRequests = async () => {
         try {
-            const response = await axios.get('/api/repairs');
+            let url = '/api/repairs';
+            if (user && user.role === 'Student' && user.relatedStudentID) {
+                url = `/api/repairs/student/${user.relatedStudentID}`;
+            }
+            const response = await axios.get(url);
             setRequests(response.data);
         } catch (error) {
             console.error('Error fetching repair requests:', error);
@@ -41,7 +45,7 @@ const RepairRequestList = ({ showNotification }) => {
             await axios.post('/api/repairs', newRequest);
             showNotification('Repair request submitted successfully!', 'success');
             setOpenDialog(false);
-            setNewRequest({ roomID: '', submitterStudentID: '', description: '' });
+            setNewRequest({ roomID: '', submitterStudentID: user?.relatedStudentID || '', description: '' });
             fetchRequests();
         } catch (error) {
             console.error('Error submitting request:', error);
@@ -53,7 +57,7 @@ const RepairRequestList = ({ showNotification }) => {
         try {
             await axios.put(`/api/repairs/${id}`, {
                 status: 'Finished',
-                handler: 'Manager' // Hardcoded for MVP
+                handler: user?.username || 'Manager'
             });
             showNotification('Request marked as finished!', 'success');
             fetchRequests();
@@ -61,6 +65,14 @@ const RepairRequestList = ({ showNotification }) => {
             console.error('Error updating request:', error);
             showNotification('Failed to update request.', 'error');
         }
+    };
+
+    const handleOpenDialog = () => {
+        setNewRequest({
+            ...newRequest,
+            submitterStudentID: user?.relatedStudentID || ''
+        });
+        setOpenDialog(true);
     };
 
     return (
@@ -72,7 +84,7 @@ const RepairRequestList = ({ showNotification }) => {
                 <Button 
                     variant="contained" 
                     startIcon={<AddIcon />} 
-                    onClick={() => setOpenDialog(true)}
+                    onClick={handleOpenDialog}
                 >
                     Submit Request
                 </Button>
@@ -111,7 +123,7 @@ const RepairRequestList = ({ showNotification }) => {
                                 <TableCell>{row.handler || '-'}</TableCell>
                                 <TableCell>{row.finishTime ? new Date(row.finishTime).toLocaleString() : '-'}</TableCell>
                                 <TableCell>
-                                    {row.status === 'Pending' && (
+                                    {row.status === 'Pending' && user?.role !== 'Student' && (
                                         <Tooltip title="Mark as Finished">
                                             <IconButton color="success" onClick={() => handleComplete(row.repairID)}>
                                                 <CheckCircleIcon />
@@ -151,6 +163,7 @@ const RepairRequestList = ({ showNotification }) => {
                         fullWidth
                         value={newRequest.submitterStudentID}
                         onChange={(e) => setNewRequest({ ...newRequest, submitterStudentID: e.target.value })}
+                        disabled={user?.role === 'Student'}
                     />
                     <TextField
                         margin="dense"
