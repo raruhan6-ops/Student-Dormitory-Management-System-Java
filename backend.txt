@@ -1,0 +1,1 @@
+ cd "c:\Users\Ruhan\Desktop\Student Dormitory Management System\backend" ; & "$env:USERPROFILE\.maven\maven-3.9.11\bin\mvn.cmd" spring-boot:run  

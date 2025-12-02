@@ -3,6 +3,9 @@ import { ReactNode } from 'react'
 import { ThemeProvider } from 'next-themes'
 import { Metadata } from 'next'
 import Navbar from '@/components/Navbar'
+import dynamic from 'next/dynamic'
+
+const ChatBot = dynamic(() => import('@/components/ChatBot'), { ssr: false })
 
 export const metadata: Metadata = {
   title: '学生宿舍管理系统',
@@ -21,6 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Navbar />
             <main className="flex-1">{children}</main>
           </div>
+          <ChatBot />
         </ThemeProvider>
       </body>
     </html>
