@@ -1,0 +1,227 @@
+Student Dormitory Management System – MVP and Project Specification
+1. Project Overview
+This document describes the Minimum Viable Product (MVP) and project structure for a Student Dormitory Management System. It is intended for use as a database course design project, and focuses on clear data modeling, core business logic, and typical usage scenarios that can be implemented within a semester.
+1.1 Background
+University dormitories host a large number of students. Manual management using paper forms or simple spreadsheets is error-prone and inefficient. A dormitory management system helps administrators manage buildings, rooms, and beds, track student accommodation records, record repair requests, and provide necessary information services to students.
+1.2 Objectives
+- Provide a basic information system for managing dorm buildings, rooms, beds, and students.
+- Record student check-in and check-out, and show current occupancy for each room.
+- Allow students (or staff) to submit and track repair requests.
+- Provide basic role-based access control (e.g., student vs. dorm manager vs. administrator).
+- Demonstrate key database concepts: ER modeling, relational schema design, SQL queries, and simple transaction logic.
+1.3 Target Users and Roles
+- Student: views personal information and current dorm assignment; submits repair requests.
+- Dorm Manager: manages buildings, rooms, beds; assigns students to beds; handles repair requests.
+- System Administrator: manages user accounts, roles, and high-level configuration.
+2. System Structure Overview
+The system is designed as a typical management information system built on a relational database (e.g., MySQL, PostgreSQL, openGauss). The recommended architecture is a browser/server (B/S) model with a web application front-end and a database back-end, but the design can also be implemented as a desktop application.
+2.1 Logical Architecture
+- Presentation Layer: pages or forms for login, student management, dorm management, repair management, and reporting.
+- Business Logic Layer: implements operations such as assigning beds, checking in/out, validating business rules, and processing repair requests.
+- Data Access Layer: executes SQL statements, manages transactions, and maps database tables to objects or data structures.
+- Database Layer: relational database storing all persistent data.
+2.2 Main Functional Modules
+- User and Authentication Management
+- Student Information Management
+- Dorm Building, Room, and Bed Management
+- Accommodation (Check-In / Check-Out) Management
+- Repair Request Management
+- Basic Reporting and Querying (optionally export to Excel/PDF for bonus marks)
+3. MVP Feature Definition
+The MVP focuses on the smallest set of features that covers the core business process of dormitory management while still being feasible to develop within the given course project timeframe.
+3.1 Student Role – MVP Functions
+- Login to the system using a username and password.
+- View personal basic information (name, student ID, major, class, phone).
+- View current dorm assignment (building, room, bed).
+- Submit a new repair request for their room and view the status of their repair requests.
+3.2 Dorm Manager Role – MVP Functions
+- Login to the system.
+- Maintain dorm building, room, and bed information (add/edit/delete where appropriate).
+- Add and maintain student records (basic information).
+- Assign students to available beds (check-in).
+- Process student moves and check-outs, updating bed status and occupancy.
+- View room occupancy status (e.g., list of students in a building or room).
+- View and handle repair requests (update status, add handler and completion time).
+3.3 Administrator Role – MVP Functions
+- Create and manage user accounts (username, password, role).
+- Reset passwords if users forget them.
+- Optionally view overall statistics (counts of users, buildings, rooms, etc.).
+3.4 Out-of-Scope / Future Features (Phase 2)
+- Automatic bed assignment algorithms based on preferences or constraints.
+- Fine-grained permission management (per-module or per-operation).
+- Detailed billing and fee management (e.g., electricity fees per room).
+- Notification features (email/SMS alerts for repairs or assignments).
+- Integration with other university systems (academic affairs, student information).
+4. Detailed Functional Requirements
+4.1 Use Case: User Login
+Purpose: Authenticate users and provide different interfaces based on their roles.
+Actors: Student, Dorm Manager, Administrator.
+Preconditions: User account exists in the system with a username, password, and role.
+Main Flow:
+  1. User opens the login page.
+  2. User enters username and password.
+  3. System verifies the credentials against the UserAccount table.
+  4. If valid, the system creates a session and redirects the user to their role-specific home page.
+  5. If invalid, the system displays an error message and allows retry.
+Postconditions: User is authenticated and can access permitted functionalities.
+4.2 Use Case: Manage Student Basic Information
+Purpose: Maintain accurate basic information for each student.
+Actors: Dorm Manager, Administrator.
+Main Operations:
+- Add a new student record (StudentID, Name, Gender, Major, Class, Phone, EnrollmentYear).
+- Edit existing student information.
+- Search students by student ID, name, major, class (with optional fuzzy search).
+4.3 Use Case: Manage Buildings, Rooms, and Beds
+Purpose: Maintain structural data about dormitories.
+Actors: Dorm Manager, Administrator.
+Main Operations:
+- Add and edit dormitory buildings (name, location, manager).
+- Add and edit rooms for each building (room number, capacity, type).
+- Add and edit beds within each room (bed number, status).
+- View a hierarchical list: Building → Rooms → Beds, including current occupancy.
+4.4 Use Case: Student Check-In (Assign Bed)
+Purpose: Assign a student to an available bed and record the accommodation.
+Actors: Dorm Manager.
+Preconditions:
+- Student basic information exists.
+- Target bed is in status "Available".
+Main Flow:
+  1. Dorm manager searches and selects a student.
+  2. Dorm manager searches and selects an available bed (Building, Room, Bed).
+  3. System creates a new CheckInOut record with CheckInDate = today and Status = "CurrentlyLiving".
+  4. System updates Bed.Status to "Occupied" and increments Room.CurrentOccupancy.
+Postconditions: Student is assigned to a bed and appears in current occupancy lists.
+4.5 Use Case: Student Check-Out or Room Change
+Purpose: Release beds, record student departures, and support room moves.
+Actors: Dorm Manager.
+Main Flow for Check-Out:
+  1. Dorm manager selects a currently living student.
+  2. System finds the active CheckInOut record and sets CheckOutDate = today, Status = "CheckedOut".
+  3. System updates the associated bed and room: Bed.Status = "Available", Room.CurrentOccupancy decremented.
+Main Flow for Room Change:
+  1. Perform a check-out from the old bed as above.
+  2. Perform a new check-in to the new bed as in the check-in use case.
+4.6 Use Case: Repair Request Management
+Purpose: Allow students or staff to record and track repair issues in dorm rooms.
+Actors: Student, Dorm Manager.
+Main Operations:
+- Student submits a repair request specifying room, problem description, and contact information.
+- System records the request with status = "Pending".
+- Dorm manager views a list of pending requests and assigns a handler.
+- After completion, the manager updates status to "Finished" and records FinishTime.
+- Both students and managers can view historical repair records.
+4.7 Use Case: Querying and Reporting
+Purpose: Provide useful information for day-to-day management.
+Actors: Dorm Manager, Administrator.
+Example Queries:
+- List of students in a given building or room.
+- Current occupancy vs. capacity for each room.
+- All repair requests for a given building during a date range.
+- Search students by name (fuzzy), major, or class.
+5. Data Model and Database Design
+5.1 Entity List and Descriptions
+1) Student: stores basic information about each student.
+2) DormBuilding: stores information about each dormitory building.
+3) Room: stores information about rooms within each building.
+4) Bed: stores information about individual beds in rooms.
+5) CheckInOut: stores accommodation records (which student lived in which bed and when).
+6) RepairRequest: stores repair requests for rooms.
+7) FeeRecord (optional for bonus): stores accommodation or related fees per student.
+8) UserAccount: stores login account data and roles for the system.
+5.2 Relational Schemas (Logical Design)
+Student(StudentID PK, Name, Gender, Major, Class, Phone, EnrollmentYear)
+DormBuilding(BuildingID PK, BuildingName, Location, ManagerName, ManagerPhone)
+Room(RoomID PK, BuildingID FK→DormBuilding, RoomNumber, Capacity, CurrentOccupancy, RoomType)
+Bed(BedID PK, RoomID FK→Room, BedNumber, Status)
+CheckInOut(RecordID PK, StudentID FK→Student, BedID FK→Bed, CheckInDate, CheckOutDate, Status)
+RepairRequest(RepairID PK, RoomID FK→Room, SubmitterStudentID FK→Student, Description, SubmitTime, Status, Handler, FinishTime)
+FeeRecord (optional)(FeeID PK, StudentID FK→Student, FeeType, Amount, PayDate, Remark)
+UserAccount(UserID PK, Username, PasswordHash, Role, RelatedStudentID FK→Student)
+5.3 Example Table Definitions (SQL Sketch)
+Example: Student table (MySQL-style syntax):
+CREATE TABLE Student (
+    StudentID      VARCHAR(20) PRIMARY KEY,
+    Name           VARCHAR(50) NOT NULL,
+    Gender         CHAR(1) CHECK (Gender IN ('M', 'F')),
+    Major          VARCHAR(100),
+    Class          VARCHAR(50),
+    Phone          VARCHAR(20),
+    EnrollmentYear INT
+);
+Example: Room table:
+CREATE TABLE Room (
+    RoomID           INT PRIMARY KEY AUTO_INCREMENT,
+    BuildingID       INT NOT NULL,
+    RoomNumber       VARCHAR(20) NOT NULL,
+    Capacity         INT NOT NULL,
+    CurrentOccupancy INT NOT NULL DEFAULT 0,
+    RoomType         VARCHAR(50),
+    FOREIGN KEY (BuildingID) REFERENCES DormBuilding(BuildingID)
+);
+5.4 Constraints and Business Rules
+- For each bed, at most one CheckInOut record may have Status = "CurrentlyLiving".
+- For each room, CurrentOccupancy must never exceed Capacity.
+- Only beds with Status = "Available" may be assigned to students.
+- When a student checks out, the related bed must become "Available" and room occupancy decremented.
+- UserAccount.Role should be restricted to predefined values such as "Student", "DormManager", "Admin".
+6. Example Operations and Usage Scenarios
+6.1 Scenario: Add a New Student and Assign a Bed
+1) Dorm manager adds a new student record:
+INSERT INTO Student (StudentID, Name, Gender, Major, Class, Phone, EnrollmentYear)
+VALUES ('20250001', 'Alice Wang', 'F', 'Computer Science', 'CS2301', '13800000001', 2025);
+2) Dorm manager searches for available beds in Building A, Room 301:
+SELECT BedID, BedNumber FROM Bed b
+JOIN Room r ON b.RoomID = r.RoomID
+JOIN DormBuilding d ON r.BuildingID = d.BuildingID
+WHERE d.BuildingName = 'Building A'
+  AND r.RoomNumber = '301'
+  AND b.Status = 'Available';
+3) Dorm manager assigns the student to BedID = 15:
+INSERT INTO CheckInOut (StudentID, BedID, CheckInDate, Status)
+VALUES ('20250001', 15, CURRENT_DATE, 'CurrentlyLiving');
+
+UPDATE Bed SET Status = 'Occupied' WHERE BedID = 15;
+
+UPDATE Room SET CurrentOccupancy = CurrentOccupancy + 1
+WHERE RoomID = (SELECT RoomID FROM Bed WHERE BedID = 15);
+6.2 Scenario: Student Moves to Another Room
+1) Close old accommodation record:
+UPDATE CheckInOut
+SET CheckOutDate = CURRENT_DATE, Status = 'CheckedOut'
+WHERE StudentID = '20250001' AND Status = 'CurrentlyLiving';
+2) Free the old bed and decrease occupancy:
+UPDATE Bed SET Status = 'Available'
+WHERE BedID = (SELECT BedID FROM CheckInOut
+               WHERE StudentID = '20250001'
+               ORDER BY RecordID DESC LIMIT 1);
+3) Assign a new bed (similar to the previous scenario) and update occupancy accordingly.
+6.3 Scenario: Student Submits a Repair Request
+1) Student fills in a repair form describing the issue.
+2) System identifies the student’s current room via CheckInOut and Bed → Room relations.
+3) System inserts a new RepairRequest record:
+INSERT INTO RepairRequest (RoomID, SubmitterStudentID, Description, SubmitTime, Status)
+VALUES (
+    @RoomID, -- derived from current bed
+    '20250001',
+    'Water leakage in bathroom',
+    NOW(),
+    'Pending'
+);
+6.4 Scenario: Manager Views Current Occupancy by Room
+Example query:
+SELECT d.BuildingName, r.RoomNumber, r.Capacity, r.CurrentOccupancy
+FROM Room r
+JOIN DormBuilding d ON r.BuildingID = d.BuildingID
+ORDER BY d.BuildingName, r.RoomNumber;
+7. Non-Functional Requirements
+- Usability: Interfaces should be simple and clear, suitable for non-technical staff.
+- Performance: The system should respond within a reasonable time (e.g., < 2 seconds for typical queries) for the expected number of students and rooms.
+- Reliability: Operations that modify multiple tables (e.g., check-in, check-out, room change) should use transactions to ensure consistency.
+- Security: Passwords must be stored as hashes, not in plain text. Login forms should avoid SQL injection by using prepared statements or parameterized queries.
+- Maintainability: Code and database structures should be clearly documented, with meaningful names for tables, columns, and procedures.
+8. Future Extensions
+- Add fee management (accommodation fees, penalties, etc.) with detailed reports and payment status.
+- Provide dashboards for occupancy statistics, such as occupancy rate per building or gender distribution.
+- Integrate with authentication systems (e.g., campus single sign-on).
+- Add a mobile-friendly or mini-program front-end for students to view information and submit requests.
+- Implement more advanced search and filtering, including combined conditions and fuzzy search on multiple fields.
