@@ -10,7 +10,10 @@ import com.dormitory.repository.StudentRepository;
 import com.dormitory.repository.UserAccountRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.MessageDigest;
@@ -31,6 +34,9 @@ public class AuthController {
 
     @Autowired
     private com.dormitory.service.CaptchaService captchaService;
+
+    @Value("${app.auth.secret:change-me}")
+    private String authSecret;
 
     @GetMapping("/users")
     public List<UserAccount> getAllUsers() {
@@ -53,12 +59,26 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Invalid username or password");
         }
 
-        return ResponseEntity.ok(new LoginResponse(
-                user.getUserID(),
-                user.getUsername(),
-                user.getRole(),
-                user.getRelatedStudentID()
-        ));
+        LoginResponse resp = new LoginResponse(
+            user.getUserID(),
+            user.getUsername(),
+            user.getRole(),
+            user.getRelatedStudentID()
+        );
+
+        // Build signed token and set HttpOnly cookie
+        String token = buildSignedToken(resp.getUsername(), resp.getRole(), 24 * 60 * 60);
+        String tokenValue = (token == null ? "" : token);
+        ResponseCookie cookie = ResponseCookie.from("auth", tokenValue)
+            .httpOnly(true)
+            .sameSite("Lax")
+            .path("/")
+            .maxAge(24 * 60 * 60)
+            .build();
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(resp);
     }
 
     @PostMapping("/register")
@@ -110,6 +130,29 @@ public class AuthController {
 
     private boolean verifyPassword(String rawPassword, String hashedPassword) {
         return hashPassword(rawPassword).equals(hashedPassword);
+    }
+
+    private String buildSignedToken(String username, String role, int maxAgeSeconds) {
+        long now = System.currentTimeMillis() / 1000L;
+        long exp = now + maxAgeSeconds;
+        String payload = String.format("{\"username\":\"%s\",\"role\":\"%s\",\"exp\":%d}",
+                username.replace("\"", "\""), role.replace("\"", "\""), exp);
+        byte[] payloadBytes = payload.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String payloadB64 = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(payloadBytes);
+        byte[] sig = hmacSha256(payloadB64.getBytes(java.nio.charset.StandardCharsets.UTF_8), authSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        String sigB64 = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(sig);
+        return payloadB64 + "." + sigB64;
+    }
+
+    private byte[] hmacSha256(byte[] data, byte[] key) {
+        try {
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(key, "HmacSHA256");
+            mac.init(secretKeySpec);
+            return mac.doFinal(data);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to sign token", e);
+        }
     }
 
     @PostConstruct

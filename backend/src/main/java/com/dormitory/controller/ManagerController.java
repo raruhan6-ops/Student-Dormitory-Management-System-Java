@@ -64,14 +64,69 @@ public class ManagerController {
 
     // --- Occupancy from DB View ---
     @GetMapping("/occupancy")
-    public List<OccupancyRow> getOccupancy() {
-        // We read directly from the view to avoid complex joins here
-        @SuppressWarnings("unchecked")
-        List<Object[]> rows = entityManager
-                .createNativeQuery("SELECT BuildingName, RoomNumber, capacity, CurrentOccupancy, OccupancyRate FROM vw_room_occupancy")
-                .getResultList();
+    public com.dormitory.dto.OccupancyPage getOccupancy(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String building,
+            @RequestParam(required = false) String room,
+            @RequestParam(required = false) Double minRate,
+            @RequestParam(required = false) Double maxRate,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
+        if (page < 1) page = 1;
+        if (size < 1) size = 1;
+        if (size > 100) size = 100;
 
-        List<OccupancyRow> result = new ArrayList<>();
+        StringBuilder where = new StringBuilder(" WHERE 1=1");
+        java.util.Map<String, Object> params = new java.util.HashMap<>();
+        if (building != null && !building.isBlank()) {
+            where.append(" AND BuildingName LIKE :building");
+            params.put("building", "%" + building + "%");
+        }
+        if (room != null && !room.isBlank()) {
+            where.append(" AND RoomNumber LIKE :room");
+            params.put("room", "%" + room + "%");
+        }
+        if (minRate != null) {
+            where.append(" AND OccupancyRate >= :minRate");
+            params.put("minRate", minRate);
+        }
+        if (maxRate != null) {
+            where.append(" AND OccupancyRate <= :maxRate");
+            params.put("maxRate", maxRate);
+        }
+
+        // Count total with filters
+        jakarta.persistence.Query countQuery = entityManager
+                .createNativeQuery("SELECT COUNT(*) FROM vw_room_occupancy" + where);
+        for (var e : params.entrySet()) countQuery.setParameter(e.getKey(), e.getValue());
+        Number totalNum = (Number) countQuery.getSingleResult();
+        long total = totalNum != null ? totalNum.longValue() : 0L;
+
+        int offset = (page - 1) * size;
+
+        String sortKey = (sort == null || sort.isBlank()) ? "building" : sort.toLowerCase();
+        String sortCol;
+        switch (sortKey) {
+            case "room": sortCol = "RoomNumber"; break;
+            case "capacity": sortCol = "capacity"; break;
+            case "current": sortCol = "CurrentOccupancy"; break;
+            case "rate": sortCol = "OccupancyRate"; break;
+            default: sortCol = "BuildingName"; break;
+        }
+        String dir = (order != null && order.equalsIgnoreCase("desc")) ? "DESC" : "ASC";
+
+        jakarta.persistence.Query dataQuery = entityManager
+                .createNativeQuery(
+                        "SELECT BuildingName, RoomNumber, capacity, CurrentOccupancy, OccupancyRate " +
+                    "FROM vw_room_occupancy" + where + " ORDER BY " + sortCol + " " + dir + ", BuildingName, RoomNumber LIMIT :size OFFSET :offset");
+        for (var e : params.entrySet()) dataQuery.setParameter(e.getKey(), e.getValue());
+        dataQuery.setParameter("size", size);
+        dataQuery.setParameter("offset", offset);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = (List<Object[]>) dataQuery.getResultList();
+
+        List<OccupancyRow> items = new ArrayList<>();
         for (Object[] r : rows) {
             OccupancyRow o = new OccupancyRow();
             o.setBuildingName(r[0] != null ? r[0].toString() : null);
@@ -79,9 +134,10 @@ public class ManagerController {
             o.setCapacity(r[2] != null ? ((Number) r[2]).intValue() : null);
             o.setCurrentOccupancy(r[3] != null ? ((Number) r[3]).intValue() : null);
             o.setOccupancyRate(r[4] != null ? ((Number) r[4]).doubleValue() : null);
-            result.add(o);
+            items.add(o);
         }
-        return result;
+
+        return new com.dormitory.dto.OccupancyPage(items, total, page, size);
     }
 
     // --- Export Endpoints (CSV) ---
