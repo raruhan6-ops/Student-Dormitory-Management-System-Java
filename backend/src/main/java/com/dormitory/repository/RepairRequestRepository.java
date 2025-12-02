@@ -7,4 +7,5 @@ import java.util.List;
 public interface RepairRequestRepository extends JpaRepository<RepairRequest, Integer> {
     List<RepairRequest> findBySubmitterStudentID(String submitterStudentID);
     List<RepairRequest> findByStatus(String status);
+    long countByStatus(String status);
 }

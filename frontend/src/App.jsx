@@ -8,7 +8,9 @@ import StudentList from './components/StudentList'
 import DormitoryList from './components/DormitoryList'
 import RepairRequestList from './components/RepairRequestList'
 import MyDorm from './components/MyDorm'
+import Dashboard from './components/Dashboard'
 import Login from './components/Login'
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 const theme = createTheme({
   palette: {
@@ -64,6 +66,8 @@ function App() {
     if (user.role === 'Student') {
       tabs.push({ label: "My Dorm", icon: <ApartmentIcon />, component: <MyDorm user={user} showNotification={showNotification} /> });
     } else {
+      // Manager Dashboard
+      tabs.push({ label: "Dashboard", icon: <DashboardIcon />, component: <Dashboard showNotification={showNotification} /> });
       tabs.push({ label: "Student List", icon: <SchoolIcon />, component: <StudentList showNotification={showNotification} /> });
     }
 
