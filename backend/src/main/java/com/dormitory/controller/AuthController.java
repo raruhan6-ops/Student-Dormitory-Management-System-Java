@@ -3,6 +3,8 @@ package com.dormitory.controller;
 import com.dormitory.dto.LoginRequest;
 import com.dormitory.dto.LoginResponse;
 import com.dormitory.entity.UserAccount;
+import com.dormitory.entity.Student;
+import com.dormitory.repository.StudentRepository;
 import com.dormitory.repository.UserAccountRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class AuthController {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -66,30 +71,48 @@ public class AuthController {
 
     @PostConstruct
     public void initUsers() {
-        if (userAccountRepository.count() == 0) {
-            // Create Admin
+        // Create Admin
+        if (userAccountRepository.findByUsername("admin").isEmpty()) {
             UserAccount admin = new UserAccount();
             admin.setUsername("admin");
             admin.setPasswordHash(hashPassword("admin123"));
             admin.setRole("Admin");
             userAccountRepository.save(admin);
+        }
 
-            // Create Manager
+        // Create Manager
+        if (userAccountRepository.findByUsername("manager").isEmpty()) {
             UserAccount manager = new UserAccount();
             manager.setUsername("manager");
             manager.setPasswordHash(hashPassword("manager123"));
             manager.setRole("DormManager");
             userAccountRepository.save(manager);
+        }
 
-            // Create Student
+        // Create Student
+        String studentId = "20250001";
+        if (userAccountRepository.findByUsername(studentId).isEmpty()) {
+            // Create Student Entity if not exists
+            if (!studentRepository.existsById(studentId)) {
+                Student s = new Student();
+                s.setStudentID(studentId);
+                s.setName("John Doe");
+                s.setGender("Male");
+                s.setMajor("Computer Science");
+                s.setStudentClass("CS-2025");
+                s.setPhone("1234567890");
+                s.setEnrollmentYear(2025);
+                studentRepository.save(s);
+            }
+
             UserAccount student = new UserAccount();
-            student.setUsername("student");
+            student.setUsername(studentId); // Use Student ID as username
             student.setPasswordHash(hashPassword("student123"));
             student.setRole("Student");
-            student.setRelatedStudentID("20250001"); // Example ID
+            student.setRelatedStudentID(studentId);
             userAccountRepository.save(student);
             
-            System.out.println("Default users created: admin/admin123, manager/manager123, student/student123");
+            System.out.println("Created student user: " + studentId);
         }
     }
 }

@@ -12,7 +12,7 @@ import HotelIcon from '@mui/icons-material/Hotel';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 
-const DormitoryList = ({ showNotification }) => {
+const DormitoryList = ({ showNotification, studentMode = false, currentUser = null, onBookingSuccess }) => {
     const [buildings, setBuildings] = useState([]);
     const [selectedBuilding, setSelectedBuilding] = useState(null);
     const [rooms, setRooms] = useState([]);
@@ -116,8 +116,32 @@ const DormitoryList = ({ showNotification }) => {
     // --- Check-In / Check-Out ---
     const handleOpenCheckIn = (bed) => {
         setSelectedBedForAction(bed);
-        setCheckInStudentId('');
-        setOpenCheckInDialog(true);
+        if (studentMode && currentUser) {
+            // Direct booking for students
+            if (window.confirm(`Do you want to book Bed ${bed.bedNumber} in Room ${selectedRoom.roomNumber}?`)) {
+                handleStudentBooking(bed);
+            }
+        } else {
+            // Manager manual check-in
+            setCheckInStudentId('');
+            setOpenCheckInDialog(true);
+        }
+    };
+
+    const handleStudentBooking = async (bed) => {
+        try {
+            await axios.post('/api/dormitories/check-in', {
+                studentID: currentUser.relatedStudentID,
+                bedID: bed.bedID
+            });
+            showNotification('Booking successful!', 'success');
+            if (onBookingSuccess) onBookingSuccess();
+            // Refresh beds
+            handleRoomClick(selectedRoom);
+        } catch (error) {
+            console.error('Error booking:', error);
+            showNotification(error.response?.data || 'Failed to book bed.', 'error');
+        }
     };
 
     const handleCheckIn = async () => {
@@ -167,11 +191,13 @@ const DormitoryList = ({ showNotification }) => {
                         <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography variant="h6">宿舍楼 (Buildings)</Typography>
-                                <IconButton size="small" sx={{ color: 'white' }} onClick={() => setOpenBuildingDialog(true)}>
-                                    <AddIcon />
-                                </IconButton>
+                                {!studentMode && (
+                                    <IconButton size="small" sx={{ color: 'white' }} onClick={() => setOpenBuildingDialog(true)}>
+                                        <AddIcon />
+                                    </IconButton>
+                                )}
                             </Box>
-                            <TextField 
+                            <TextField  
                                 fullWidth 
                                 variant="outlined" 
                                 size="small" 
@@ -224,7 +250,7 @@ const DormitoryList = ({ showNotification }) => {
                         <Box sx={{ p: 2, bgcolor: 'secondary.main', color: 'white' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography variant="h6">房间 (Rooms)</Typography>
-                                {selectedBuilding && (
+                                {selectedBuilding && !studentMode && (
                                     <IconButton size="small" sx={{ color: 'white' }} onClick={() => setOpenRoomDialog(true)}>
                                         <AddIcon />
                                     </IconButton>
@@ -310,12 +336,14 @@ const DormitoryList = ({ showNotification }) => {
                                                 />
                                                 {bed.status === 'Available' ? (
                                                     <Button size="small" variant="outlined" onClick={() => handleOpenCheckIn(bed)}>
-                                                        Check In
+                                                        {studentMode ? 'Book' : 'Check In'}
                                                     </Button>
                                                 ) : (
-                                                    <Button size="small" variant="outlined" color="error" onClick={() => handleCheckOut(bed)}>
-                                                        Check Out
-                                                    </Button>
+                                                    !studentMode && (
+                                                        <Button size="small" variant="outlined" color="error" onClick={() => handleCheckOut(bed)}>
+                                                            Check Out
+                                                        </Button>
+                                                    )
                                                 )}
                                             </ListItemButton>
                                             <Divider variant="inset" component="li" />

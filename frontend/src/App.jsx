@@ -7,6 +7,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import StudentList from './components/StudentList'
 import DormitoryList from './components/DormitoryList'
 import RepairRequestList from './components/RepairRequestList'
+import MyDorm from './components/MyDorm'
 import Login from './components/Login'
 
 const theme = createTheme({
@@ -58,9 +59,13 @@ function App() {
   // Define tabs based on role
   const getTabs = () => {
     if (!user) return [];
-    const tabs = [
-      { label: "Student List", icon: <SchoolIcon />, component: <StudentList showNotification={showNotification} /> }
-    ];
+    const tabs = [];
+
+    if (user.role === 'Student') {
+      tabs.push({ label: "My Dorm", icon: <ApartmentIcon />, component: <MyDorm user={user} showNotification={showNotification} /> });
+    } else {
+      tabs.push({ label: "Student List", icon: <SchoolIcon />, component: <StudentList showNotification={showNotification} /> });
+    }
 
     if (user.role === 'DormManager' || user.role === 'Admin') {
       tabs.push({ label: "Dormitory Management", icon: <ApartmentIcon />, component: <DormitoryList showNotification={showNotification} /> });

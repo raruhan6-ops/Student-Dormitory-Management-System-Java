@@ -45,7 +45,7 @@ const Login = ({ onLogin }) => {
                         required
                         fullWidth
                         id="username"
-                        label="Username"
+                        label="Username / Student ID"
                         name="username"
                         autoComplete="username"
                         autoFocus
