@@ -2,6 +2,7 @@ package com.dormitory.controller;
 
 import com.dormitory.dto.LoginRequest;
 import com.dormitory.dto.LoginResponse;
+import com.dormitory.dto.ChangePasswordRequest;
 import com.dormitory.entity.UserAccount;
 import com.dormitory.entity.Student;
 import com.dormitory.repository.StudentRepository;
@@ -53,6 +54,22 @@ public class AuthController {
         user.setPasswordHash(hashPassword(user.getPasswordHash())); // Assume frontend sends raw password in this field for register
         userAccountRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+        UserAccount user = userAccountRepository.findByUsername(request.getUsername()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        if (!verifyPassword(request.getOldPassword(), user.getPasswordHash())) {
+            return ResponseEntity.badRequest().body("Invalid old password");
+        }
+
+        user.setPasswordHash(hashPassword(request.getNewPassword()));
+        userAccountRepository.save(user);
+        return ResponseEntity.ok("Password changed successfully");
     }
 
     private String hashPassword(String password) {

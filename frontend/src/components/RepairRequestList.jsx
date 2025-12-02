@@ -3,7 +3,7 @@ import axios from 'axios';
 import { 
     Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, 
     TableHead, TableRow, Button, Dialog, DialogTitle, DialogContent, 
-    DialogActions, TextField, Chip, IconButton, Tooltip 
+    DialogActions, TextField, Chip, IconButton, Tooltip, FormControl, InputLabel, Select, MenuItem 
 } from '@mui/material';
 import BuildIcon from '@mui/icons-material/Build';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -11,6 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 
 const RepairRequestList = ({ showNotification, user }) => {
     const [requests, setRequests] = useState([]);
+    const [filterStatus, setFilterStatus] = useState('All');
     const [openDialog, setOpenDialog] = useState(false);
     const [newRequest, setNewRequest] = useState({
         roomID: '',
@@ -35,6 +36,11 @@ const RepairRequestList = ({ showNotification, user }) => {
             showNotification('Failed to fetch repair requests.', 'error');
         }
     };
+
+    const filteredRequests = requests.filter(req => {
+        if (filterStatus === 'All') return true;
+        return req.status === filterStatus;
+    });
 
     const handleSubmit = async () => {
         if (!newRequest.roomID || !newRequest.submitterStudentID || !newRequest.description) {
@@ -81,13 +87,27 @@ const RepairRequestList = ({ showNotification, user }) => {
                 <Typography variant="h5" component="div">
                     报修管理 (Repair Requests)
                 </Typography>
-                <Button 
-                    variant="contained" 
-                    startIcon={<AddIcon />} 
-                    onClick={handleOpenDialog}
-                >
-                    Submit Request
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>Status</InputLabel>
+                        <Select
+                            value={filterStatus}
+                            label="Status"
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                        >
+                            <MenuItem value="All">All</MenuItem>
+                            <MenuItem value="Pending">Pending</MenuItem>
+                            <MenuItem value="Finished">Finished</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <Button 
+                        variant="contained" 
+                        startIcon={<AddIcon />} 
+                        onClick={handleOpenDialog}
+                    >
+                        Submit Request
+                    </Button>
+                </Box>
             </Box>
 
             <TableContainer component={Paper}>
@@ -106,7 +126,7 @@ const RepairRequestList = ({ showNotification, user }) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {requests.map((row) => (
+                        {filteredRequests.map((row) => (
                             <TableRow key={row.repairID}>
                                 <TableCell>{row.repairID}</TableCell>
                                 <TableCell>{row.roomID}</TableCell>

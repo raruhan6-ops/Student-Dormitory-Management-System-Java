@@ -132,8 +132,11 @@ const StudentList = ({ showNotification }) => {
     const filteredStudents = students.filter(student => {
         const term = searchTerm.toLowerCase();
         const idMatch = student.studentID ? student.studentID.toString().toLowerCase().includes(term) : false;
+        const nameMatch = student.name ? student.name.toLowerCase().includes(term) : false;
+        const classMatch = student.studentClass ? student.studentClass.toLowerCase().includes(term) : false;
+        const majorMatch = student.major ? student.major.toLowerCase().includes(term) : false;
         const phoneMatch = student.phone ? student.phone.toString().toLowerCase().includes(term) : false;
-        return idMatch || phoneMatch;
+        return idMatch || nameMatch || classMatch || majorMatch || phoneMatch;
     });
 
     return (
@@ -146,7 +149,7 @@ const StudentList = ({ showNotification }) => {
                     <TextField 
                         variant="outlined" 
                         size="small" 
-                        placeholder="Search by ID or Phone..." 
+                        placeholder="Search by ID, Name, Class..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         InputProps={{
