@@ -4,6 +4,7 @@ import com.dormitory.entity.*;
 import com.dormitory.repository.*;
 import com.dormitory.service.AuditService;
 import com.dormitory.service.EmailService;
+import com.dormitory.service.RoomBookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -53,6 +53,9 @@ public class RoomApplicationController {
 
     @Autowired
     private AuditService auditService;
+
+    @Autowired
+    private RoomBookingService roomBookingService;
 
     /**
      * Get all room applications (for managers/admins)
@@ -134,6 +137,7 @@ public class RoomApplicationController {
 
     /**
      * Approve a room application
+     * Uses RoomBookingService for thread-safe concurrent booking
      */
     @PostMapping("/{id}/approve")
     public ResponseEntity<?> approveApplication(
@@ -150,64 +154,40 @@ public class RoomApplicationController {
             return ResponseEntity.status(403).body(Map.of("error", "Only managers and admins can approve applications"));
         }
 
+        // Use the booking service for thread-safe approval
+        RoomBookingService.BookingResult result = roomBookingService.approveApplicationAndCheckIn(id, username);
+
+        if (!result.isSuccess()) {
+            // Map error codes to appropriate HTTP status
+            if ("APPLICATION_NOT_FOUND".equals(result.getErrorCode()) || 
+                "BED_NOT_FOUND".equals(result.getErrorCode()) ||
+                "STUDENT_NOT_FOUND".equals(result.getErrorCode())) {
+                return ResponseEntity.badRequest().body(Map.of("error", result.getMessage()));
+            }
+            if ("ALREADY_PROCESSED".equals(result.getErrorCode())) {
+                return ResponseEntity.badRequest().body(Map.of("error", result.getMessage()));
+            }
+            if ("BED_OCCUPIED".equals(result.getErrorCode()) || "BED_NOT_AVAILABLE".equals(result.getErrorCode())) {
+                return ResponseEntity.status(409).body(Map.of(
+                    "error", result.getMessage(),
+                    "code", "CONCURRENT_BOOKING"
+                ));
+            }
+            if ("CONCURRENT_MODIFICATION".equals(result.getErrorCode())) {
+                return ResponseEntity.status(409).body(Map.of(
+                    "error", "Another manager is processing this application. Please refresh and try again.",
+                    "code", "CONCURRENT_MODIFICATION"
+                ));
+            }
+            return ResponseEntity.status(500).body(Map.of("error", result.getMessage()));
+        }
+
+        // Get updated info for response and audit
         RoomApplication application = roomApplicationRepository.findById(id).orElse(null);
-        if (application == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Application not found"));
-        }
-
-        if (!"Pending".equals(application.getStatus())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "This application has already been processed"));
-        }
-
-        // Validate bed is still available
         Bed bed = bedRepository.findById(application.getBedID()).orElse(null);
-        if (bed == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Bed not found"));
-        }
-        if (!"Available".equalsIgnoreCase(bed.getStatus())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "This bed is no longer available. Please reject this application."));
-        }
-
-        // Get room and building
         Room room = roomRepository.findById(bed.getRoomID()).orElse(null);
-        if (room == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Room not found"));
-        }
         DormBuilding building = buildingRepository.findById(room.getBuildingID()).orElse(null);
-        if (building == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Building not found"));
-        }
-
-        // Get student
         Student student = studentRepository.findById(application.getStudentID()).orElse(null);
-        if (student == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Student not found"));
-        }
-
-        // Perform check-in
-        bed.setStatus("Occupied");
-        bedRepository.save(bed);
-
-        room.setCurrentOccupancy(room.getCurrentOccupancy() + 1);
-        roomRepository.save(room);
-
-        student.setDormBuilding(building.getBuildingName());
-        student.setRoomNumber(room.getRoomNumber());
-        student.setBedNumber(bed.getBedNumber());
-        studentRepository.save(student);
-
-        CheckInOut checkInOut = new CheckInOut();
-        checkInOut.setStudentID(student.getStudentID());
-        checkInOut.setBedID(bed.getBedID());
-        checkInOut.setCheckInDate(LocalDate.now());
-        checkInOut.setStatus("CurrentlyLiving");
-        checkInOutRepository.save(checkInOut);
-
-        // Update application
-        application.setStatus("Approved");
-        application.setProcessTime(LocalDateTime.now());
-        application.setProcessedBy(username);
-        roomApplicationRepository.save(application);
 
         // Send email notification
         emailService.sendCheckInNotification(student, building.getBuildingName(), room.getRoomNumber(), bed.getBedNumber());
@@ -231,6 +211,7 @@ public class RoomApplicationController {
 
     /**
      * Reject a room application
+     * Uses RoomBookingService to properly release reserved beds
      */
     @PostMapping("/{id}/reject")
     public ResponseEntity<?> rejectApplication(
@@ -248,38 +229,35 @@ public class RoomApplicationController {
             return ResponseEntity.status(403).body(Map.of("error", "Only managers and admins can reject applications"));
         }
 
-        RoomApplication application = roomApplicationRepository.findById(id).orElse(null);
-        if (application == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Application not found"));
-        }
-
-        if (!"Pending".equals(application.getStatus())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "This application has already been processed"));
-        }
-
         String reason = body != null ? body.get("reason") : null;
 
-        // Update application
-        application.setStatus("Rejected");
-        application.setProcessTime(LocalDateTime.now());
-        application.setProcessedBy(username);
-        application.setRejectReason(reason != null ? reason : "Application rejected by manager");
-        roomApplicationRepository.save(application);
+        // Use booking service for thread-safe rejection
+        RoomBookingService.BookingResult result = roomBookingService.rejectApplication(id, reason, username);
 
-        // Get student info for logging
-        Student student = studentRepository.findById(application.getStudentID()).orElse(null);
+        if (!result.isSuccess()) {
+            if ("APPLICATION_NOT_FOUND".equals(result.getErrorCode())) {
+                return ResponseEntity.badRequest().body(Map.of("error", result.getMessage()));
+            }
+            if ("ALREADY_PROCESSED".equals(result.getErrorCode())) {
+                return ResponseEntity.badRequest().body(Map.of("error", result.getMessage()));
+            }
+            return ResponseEntity.status(500).body(Map.of("error", result.getMessage()));
+        }
+
+        // Get application for audit log
+        RoomApplication application = roomApplicationRepository.findById(id).orElse(null);
 
         // Audit log
         auditService.log("REJECT_APPLICATION", "ROOM_APPLICATION", id.toString(),
                 String.format("Rejected room application for student %s - Reason: %s",
-                        application.getStudentID(),
+                        application != null ? application.getStudentID() : "unknown",
                         reason != null ? reason : "No reason provided"),
                 username);
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Application rejected");
         response.put("applicationID", id);
-        response.put("reason", application.getRejectReason());
+        response.put("reason", reason != null ? reason : "Application rejected by manager");
 
         return ResponseEntity.ok(response);
     }

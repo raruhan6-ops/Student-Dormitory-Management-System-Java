@@ -79,7 +79,16 @@ export default function ApplicationsPage() {
         credentials: 'include'
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data || 'Failed to approve');
+      
+      // Handle concurrent booking conflict
+      if (res.status === 409) {
+        const errorMsg = data.error || 'This bed has already been assigned to another student.';
+        alert(`⚠️ Concurrent Booking Conflict\n\n${errorMsg}\n\nThe application list will be refreshed.`);
+        fetchApplications();
+        return;
+      }
+      
+      if (!res.ok) throw new Error(data.error || data.message || data || 'Failed to approve');
       alert(`✅ ${data.message}`);
       fetchApplications();
     } catch (err: unknown) {

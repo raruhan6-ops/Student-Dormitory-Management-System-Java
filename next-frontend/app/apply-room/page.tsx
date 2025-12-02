@@ -109,7 +109,25 @@ export default function ApplyRoomPage() {
       const data = await res.json()
       
       if (!res.ok) {
-        throw new Error(typeof data === 'string' ? data : data.message || 'Application failed')
+        // Handle concurrent booking conflict (409 status)
+        if (res.status === 409) {
+          const errorMsg = data.error || 'This bed was just taken by another student.'
+          setMessage({ 
+            type: 'error', 
+            text: `${errorMsg} Please select a different bed.`
+          })
+          // Refresh the available rooms to get updated data
+          setSelectedBed(null)
+          setSelectedRoom(null)
+          setSelectedBuilding(null)
+          const roomsRes = await fetch('/api/student-portal/available-rooms')
+          if (roomsRes.ok) {
+            const updatedData = await roomsRes.json()
+            setBuildings(updatedData)
+          }
+          return
+        }
+        throw new Error(typeof data === 'string' ? data : data.error || data.message || 'Application failed')
       }
 
       setMessage({ 
