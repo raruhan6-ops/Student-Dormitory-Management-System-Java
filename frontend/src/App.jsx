@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { AppBar, Toolbar, Typography, Container, Box, Tabs, Tab, CssBaseline, ThemeProvider, createTheme, Snackbar, Alert } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 import ApartmentIcon from '@mui/icons-material/Apartment';
+import BuildIcon from '@mui/icons-material/Build';
 import StudentList from './components/StudentList'
 import DormitoryList from './components/DormitoryList'
+import RepairRequestList from './components/RepairRequestList'
 
 const theme = createTheme({
   palette: {
@@ -52,15 +54,14 @@ function App() {
           <Tabs value={view} onChange={handleChange} textColor="inherit" indicatorColor="secondary" centered>
             <Tab icon={<SchoolIcon />} label="Student List" />
             <Tab icon={<ApartmentIcon />} label="Dormitory Management" />
+            <Tab icon={<BuildIcon />} label="Repair Requests" />
           </Tabs>
         </AppBar>
 
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-          {view === 0 ? (
-            <StudentList showNotification={showNotification} />
-          ) : (
-            <DormitoryList showNotification={showNotification} />
-          )}
+          {view === 0 && <StudentList showNotification={showNotification} />}
+          {view === 1 && <DormitoryList showNotification={showNotification} />}
+          {view === 2 && <RepairRequestList showNotification={showNotification} />}
         </Container>
 
         <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification}>

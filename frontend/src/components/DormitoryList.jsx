@@ -31,6 +31,11 @@ const DormitoryList = ({ showNotification }) => {
     const [openRoomDialog, setOpenRoomDialog] = useState(false);
     const [newRoom, setNewRoom] = useState({ roomNumber: '', capacity: 4, roomType: 'Standard' });
 
+    // Check-In/Out States
+    const [openCheckInDialog, setOpenCheckInDialog] = useState(false);
+    const [checkInStudentId, setCheckInStudentId] = useState('');
+    const [selectedBedForAction, setSelectedBedForAction] = useState(null);
+
     useEffect(() => {
         fetchBuildings();
     }, []);
@@ -105,6 +110,43 @@ const DormitoryList = ({ showNotification }) => {
         } catch (error) {
             console.error('Error adding room:', error);
             showNotification('Failed to add room.', 'error');
+        }
+    };
+
+    // --- Check-In / Check-Out ---
+    const handleOpenCheckIn = (bed) => {
+        setSelectedBedForAction(bed);
+        setCheckInStudentId('');
+        setOpenCheckInDialog(true);
+    };
+
+    const handleCheckIn = async () => {
+        if (!checkInStudentId || !selectedBedForAction) return;
+        try {
+            await axios.post('/api/dormitories/check-in', {
+                studentID: checkInStudentId,
+                bedID: selectedBedForAction.bedID
+            });
+            showNotification('Check-in successful!', 'success');
+            setOpenCheckInDialog(false);
+            // Refresh beds
+            handleRoomClick(selectedRoom);
+        } catch (error) {
+            console.error('Error checking in:', error);
+            showNotification(error.response?.data || 'Failed to check in.', 'error');
+        }
+    };
+
+    const handleCheckOut = async (bed) => {
+        if (!window.confirm(`Are you sure you want to check out ${bed.studentName}?`)) return;
+        try {
+            await axios.post(`/api/dormitories/check-out/${bed.studentID}`);
+            showNotification('Check-out successful!', 'success');
+            // Refresh beds
+            handleRoomClick(selectedRoom);
+        } catch (error) {
+            console.error('Error checking out:', error);
+            showNotification(error.response?.data || 'Failed to check out.', 'error');
         }
     };
 
@@ -264,7 +306,17 @@ const DormitoryList = ({ showNotification }) => {
                                                     label={bed.status} 
                                                     color={bed.status === 'Occupied' ? 'error' : 'success'} 
                                                     size="small" 
+                                                    sx={{ mr: 1 }}
                                                 />
+                                                {bed.status === 'Available' ? (
+                                                    <Button size="small" variant="outlined" onClick={() => handleOpenCheckIn(bed)}>
+                                                        Check In
+                                                    </Button>
+                                                ) : (
+                                                    <Button size="small" variant="outlined" color="error" onClick={() => handleCheckOut(bed)}>
+                                                        Check Out
+                                                    </Button>
+                                                )}
                                             </ListItemButton>
                                             <Divider variant="inset" component="li" />
                                         </React.Fragment>
@@ -351,6 +403,26 @@ const DormitoryList = ({ showNotification }) => {
                 <DialogActions>
                     <Button onClick={() => setOpenRoomDialog(false)}>Cancel</Button>
                     <Button onClick={handleAddRoom} variant="contained">Add</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Check-In Dialog */}
+            <Dialog open={openCheckInDialog} onClose={() => setOpenCheckInDialog(false)}>
+                <DialogTitle>Check In Student</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Student ID"
+                        fullWidth
+                        value={checkInStudentId}
+                        onChange={(e) => setCheckInStudentId(e.target.value)}
+                        helperText="Enter the ID of the student to assign to this bed."
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenCheckInDialog(false)}>Cancel</Button>
+                    <Button onClick={handleCheckIn} variant="contained" color="primary">Check In</Button>
                 </DialogActions>
             </Dialog>
         </Box>
