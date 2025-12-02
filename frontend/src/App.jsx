@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AppBar, Toolbar, Typography, Container, Box, Tabs, Tab, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { AppBar, Toolbar, Typography, Container, Box, Tabs, Tab, CssBaseline, ThemeProvider, createTheme, Snackbar, Alert } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import StudentList from './components/StudentList'
@@ -21,9 +21,21 @@ const theme = createTheme({
 
 function App() {
   const [view, setView] = useState(0);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
   const handleChange = (event, newValue) => {
     setView(newValue);
+  };
+
+  const showNotification = (message, severity = 'info') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setNotification({ ...notification, open: false });
   };
 
   return (
@@ -44,8 +56,18 @@ function App() {
         </AppBar>
 
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-          {view === 0 ? <StudentList /> : <DormitoryList />}
+          {view === 0 ? (
+            <StudentList showNotification={showNotification} />
+          ) : (
+            <DormitoryList showNotification={showNotification} />
+          )}
         </Container>
+
+        <Snackbar open={notification.open} autoHideDuration={6000} onClose={handleCloseNotification}>
+          <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
+            {notification.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </ThemeProvider>
   )

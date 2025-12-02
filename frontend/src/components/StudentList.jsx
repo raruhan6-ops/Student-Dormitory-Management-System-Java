@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Paper, Typography } from '@mui/material';
+import { Paper, Typography, Box, TextField, InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
 const columns = [
   { field: 'studentID', headerName: '学号 (ID)', width: 130 },
@@ -16,14 +17,17 @@ const columns = [
   { field: 'bedNumber', headerName: '床位 (Bed)', width: 100 },
 ];
 
-const StudentList = () => {
+const StudentList = ({ showNotification }) => {
     const [students, setStudents] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         fetchStudents();
     }, []);
 
     const fetchStudents = async () => {
+        setLoading(true);
         try {
             const response = await axios.get('/api/students');
             // DataGrid needs a unique 'id' property. We can use studentID as id.
@@ -31,17 +35,45 @@ const StudentList = () => {
             setStudents(studentsWithId);
         } catch (error) {
             console.error('Error fetching students:', error);
+            showNotification('Failed to fetch students. Please try again later.', 'error');
+        } finally {
+            setLoading(false);
         }
     };
 
+    const filteredStudents = students.filter(student => {
+        const term = searchTerm.toLowerCase();
+        const idMatch = student.studentID ? student.studentID.toString().toLowerCase().includes(term) : false;
+        const phoneMatch = student.phone ? student.phone.toString().toLowerCase().includes(term) : false;
+        return idMatch || phoneMatch;
+    });
+
     return (
         <Paper elevation={3} sx={{ p: 3, height: 650, width: '100%' }}>
-            <Typography variant="h5" gutterBottom component="div" sx={{ mb: 2 }}>
-                学生列表 (Student List)
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h5" component="div">
+                    学生列表 (Student List)
+                </Typography>
+                <TextField 
+                    variant="outlined" 
+                    size="small" 
+                    placeholder="Search by ID or Phone..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon />
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{ width: 300 }}
+                />
+            </Box>
             <DataGrid
-                rows={students}
+                rows={filteredStudents}
                 columns={columns}
+                loading={loading}
                 initialState={{
                     pagination: {
                         paginationModel: { page: 0, pageSize: 10 },

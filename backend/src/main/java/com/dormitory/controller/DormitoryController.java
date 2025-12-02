@@ -1,11 +1,14 @@
 package com.dormitory.controller;
 
+import com.dormitory.dto.BedDTO;
 import com.dormitory.entity.Bed;
 import com.dormitory.entity.DormBuilding;
 import com.dormitory.entity.Room;
+import com.dormitory.entity.Student;
 import com.dormitory.repository.BedRepository;
 import com.dormitory.repository.DormBuildingRepository;
 import com.dormitory.repository.RoomRepository;
+import com.dormitory.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +29,9 @@ public class DormitoryController {
     @Autowired
     private BedRepository bedRepository;
 
+    @Autowired
+    private StudentRepository studentRepository;
+
     @GetMapping
     public List<DormBuilding> getAllBuildings() {
         return buildingRepository.findAll();
@@ -40,9 +46,47 @@ public class DormitoryController {
     }
 
     @GetMapping("/rooms/{roomId}/beds")
-    public List<Bed> getBedsByRoom(@PathVariable Integer roomId) {
-        return bedRepository.findAll().stream()
+    public List<BedDTO> getBedsByRoom(@PathVariable Integer roomId) {
+        // 1. Get the Room to find building and room number
+        Room room = roomRepository.findById(roomId).orElse(null);
+        if (room == null) {
+            return List.of();
+        }
+
+        // 2. Get Building to find building name
+        DormBuilding building = buildingRepository.findById(room.getBuildingID()).orElse(null);
+        if (building == null) {
+            return List.of();
+        }
+
+        // 3. Get all beds in the room
+        List<Bed> beds = bedRepository.findAll().stream()
                 .filter(bed -> bed.getRoomID().equals(roomId))
                 .collect(Collectors.toList());
+
+        // 4. Get all students in the room
+        List<Student> students = studentRepository.findByDormBuildingAndRoomNumber(building.getBuildingName(), room.getRoomNumber());
+
+        // 5. Map Bed to BedDTO and attach student info
+        return beds.stream().map(bed -> {
+            BedDTO dto = new BedDTO();
+            dto.setBedID(bed.getBedID());
+            dto.setRoomID(bed.getRoomID());
+            dto.setBedNumber(bed.getBedNumber());
+            dto.setStatus(bed.getStatus());
+
+            // Find student occupying this bed
+            Student occupant = students.stream()
+                    .filter(s -> s.getBedNumber().equals(bed.getBedNumber()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (occupant != null) {
+                dto.setStudentID(occupant.getStudentID());
+                dto.setStudentName(occupant.getName());
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 }
