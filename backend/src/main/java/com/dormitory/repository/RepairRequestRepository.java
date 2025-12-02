@@ -8,4 +8,8 @@ public interface RepairRequestRepository extends JpaRepository<RepairRequest, In
     List<RepairRequest> findBySubmitterStudentID(String submitterStudentID);
     List<RepairRequest> findByStatus(String status);
     long countByStatus(String status);
+    
+    // Fuzzy search
+    List<RepairRequest> findByDescriptionContaining(String keyword);
+    List<RepairRequest> findByStatusAndDescriptionContaining(String status, String keyword);
 }

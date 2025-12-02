@@ -29,6 +29,9 @@ public class AuthController {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Autowired
+    private com.dormitory.service.CaptchaService captchaService;
+
     @GetMapping("/users")
     public List<UserAccount> getAllUsers() {
         return userAccountRepository.findAll();
@@ -36,6 +39,11 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        // Validate Captcha
+        if (!captchaService.validateCaptcha(request.getCaptchaId(), request.getCaptchaText())) {
+            return ResponseEntity.badRequest().body("Invalid or expired captcha");
+        }
+
         UserAccount user = userAccountRepository.findByUsername(request.getUsername()).orElse(null);
         if (user == null) {
             return ResponseEntity.badRequest().body("Invalid username or password");

@@ -10,6 +10,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import DownloadIcon from '@mui/icons-material/Download';
 
 const StudentList = ({ showNotification }) => {
     const [students, setStudents] = useState([]);
@@ -61,10 +62,13 @@ const StudentList = ({ showNotification }) => {
         fetchStudents();
     }, []);
 
-    const fetchStudents = async () => {
+    const fetchStudents = async (query = '') => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/students');
+            const url = query 
+                ? `/api/manager/students/search?q=${query}` 
+                : '/api/students';
+            const response = await axios.get(url);
             const studentsWithId = response.data.map(s => ({ ...s, id: s.studentID }));
             setStudents(studentsWithId);
         } catch (error) {
@@ -73,6 +77,14 @@ const StudentList = ({ showNotification }) => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSearch = () => {
+        fetchStudents(searchTerm);
+    };
+
+    const handleExport = () => {
+        window.open('http://localhost:8080/api/manager/export/students', '_blank');
     };
 
     const handleOpenAdd = () => {
@@ -132,7 +144,7 @@ const StudentList = ({ showNotification }) => {
                 await axios.post('/api/students', currentStudent);
                 showNotification('Student added successfully!', 'success');
             }
-            fetchStudents();
+            fetchStudents(searchTerm);
             handleCloseDialog();
         } catch (error) {
             console.error('Error saving student:', error);
@@ -145,23 +157,13 @@ const StudentList = ({ showNotification }) => {
             try {
                 await axios.delete(`/api/students/${id}`);
                 showNotification('Student deleted successfully!', 'success');
-                fetchStudents();
+                fetchStudents(searchTerm);
             } catch (error) {
                 console.error('Error deleting student:', error);
                 showNotification('Failed to delete student.', 'error');
             }
         }
     };
-
-    const filteredStudents = students.filter(student => {
-        const term = searchTerm.toLowerCase();
-        const idMatch = student.studentID ? student.studentID.toString().toLowerCase().includes(term) : false;
-        const nameMatch = student.name ? student.name.toLowerCase().includes(term) : false;
-        const classMatch = student.studentClass ? student.studentClass.toLowerCase().includes(term) : false;
-        const majorMatch = student.major ? student.major.toLowerCase().includes(term) : false;
-        const phoneMatch = student.phone ? student.phone.toString().toLowerCase().includes(term) : false;
-        return idMatch || nameMatch || classMatch || majorMatch || phoneMatch;
-    });
 
     return (
         <Paper elevation={3} sx={{ p: 3, height: 650, width: '100%' }}>
@@ -176,6 +178,7 @@ const StudentList = ({ showNotification }) => {
                         placeholder="Search by ID, Name, Class..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
@@ -185,13 +188,17 @@ const StudentList = ({ showNotification }) => {
                         }}
                         sx={{ width: 300 }}
                     />
+                    <Button variant="contained" onClick={handleSearch}>Search</Button>
+                    <Button variant="outlined" startIcon={<DownloadIcon />} onClick={handleExport}>
+                        Export CSV
+                    </Button>
                     <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAdd}>
                         Add Student
                     </Button>
                 </Box>
             </Box>
             <DataGrid
-                rows={filteredStudents}
+                rows={students}
                 columns={columns}
                 loading={loading}
                 initialState={{
