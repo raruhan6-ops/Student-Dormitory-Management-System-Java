@@ -1,9 +1,12 @@
 package com.dormitory.controller;
 
+import com.dormitory.dto.OccupancyRow;
 import com.dormitory.entity.RepairRequest;
 import com.dormitory.entity.Student;
 import com.dormitory.repository.RepairRequestRepository;
 import com.dormitory.repository.StudentRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -11,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -24,13 +28,18 @@ public class ManagerController {
     @Autowired
     private RepairRequestRepository repairRequestRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     // --- Search Endpoints ---
 
     @GetMapping("/students/search")
     public List<Student> searchStudents(@RequestParam(required = false) String studentId,
                                         @RequestParam(required = false) String q) {
         if (studentId != null && !studentId.isEmpty()) {
-            return studentRepository.findAllById(List.of(studentId));
+            java.util.List<Student> only = new java.util.ArrayList<>();
+            studentRepository.findById(studentId).ifPresent(only::add);
+            return only;
         }
         if (q != null && !q.isEmpty()) {
             return studentRepository.findByNameContainingOrMajorContainingOrStudentClassContaining(q, q, q);
@@ -51,6 +60,28 @@ public class ManagerController {
             return repairRequestRepository.findByDescriptionContaining(q);
         }
         return repairRequestRepository.findAll();
+    }
+
+    // --- Occupancy from DB View ---
+    @GetMapping("/occupancy")
+    public List<OccupancyRow> getOccupancy() {
+        // We read directly from the view to avoid complex joins here
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = entityManager
+                .createNativeQuery("SELECT BuildingName, RoomNumber, capacity, CurrentOccupancy, OccupancyRate FROM vw_room_occupancy")
+                .getResultList();
+
+        List<OccupancyRow> result = new ArrayList<>();
+        for (Object[] r : rows) {
+            OccupancyRow o = new OccupancyRow();
+            o.setBuildingName(r[0] != null ? r[0].toString() : null);
+            o.setRoomNumber(r[1] != null ? r[1].toString() : null);
+            o.setCapacity(r[2] != null ? ((Number) r[2]).intValue() : null);
+            o.setCurrentOccupancy(r[3] != null ? ((Number) r[3]).intValue() : null);
+            o.setOccupancyRate(r[4] != null ? ((Number) r[4]).doubleValue() : null);
+            result.add(o);
+        }
+        return result;
     }
 
     // --- Export Endpoints (CSV) ---

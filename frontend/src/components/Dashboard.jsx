@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Grid, Paper, Typography, Box, CircularProgress, Card, CardContent } from '@mui/material';
+import { Grid, Paper, Typography, Box, CircularProgress, Card, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import HotelIcon from '@mui/icons-material/Hotel';
@@ -28,9 +28,12 @@ const StatCard = ({ title, value, icon, color }) => (
 const Dashboard = ({ showNotification }) => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [occupancy, setOccupancy] = useState([]);
+    const [occLoading, setOccLoading] = useState(true);
 
     useEffect(() => {
         fetchStats();
+        fetchOccupancy();
     }, []);
 
     const fetchStats = async () => {
@@ -42,6 +45,18 @@ const Dashboard = ({ showNotification }) => {
             showNotification('Failed to load dashboard statistics.', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchOccupancy = async () => {
+        try {
+            const response = await axios.get('/api/manager/occupancy');
+            setOccupancy(response.data || []);
+        } catch (error) {
+            console.error('Error fetching occupancy:', error);
+            showNotification('Failed to load room occupancy.', 'error');
+        } finally {
+            setOccLoading(false);
         }
     };
 
@@ -114,6 +129,43 @@ const Dashboard = ({ showNotification }) => {
                         icon={<HotelIcon fontSize="large" />} 
                         color="success" 
                     />
+                </Grid>
+                
+                {/* Occupancy Table */}
+                <Grid item xs={12}>
+                    <Paper elevation={3} sx={{ p: 2 }}>
+                        <Typography variant="h6" sx={{ mb: 2 }}>Room Occupancy</Typography>
+                        {occLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+                                <CircularProgress size={24} />
+                            </Box>
+                        ) : (
+                            <TableContainer>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Building</TableCell>
+                                            <TableCell>Room</TableCell>
+                                            <TableCell align="right">Capacity</TableCell>
+                                            <TableCell align="right">Current</TableCell>
+                                            <TableCell align="right">Rate %</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {occupancy.map((row, idx) => (
+                                            <TableRow key={idx}>
+                                                <TableCell>{row.buildingName}</TableCell>
+                                                <TableCell>{row.roomNumber}</TableCell>
+                                                <TableCell align="right">{row.capacity}</TableCell>
+                                                <TableCell align="right">{row.currentOccupancy}</TableCell>
+                                                <TableCell align="right">{row.occupancyRate?.toFixed ? row.occupancyRate.toFixed(2) : row.occupancyRate}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
+                    </Paper>
                 </Grid>
             </Grid>
         </Box>
