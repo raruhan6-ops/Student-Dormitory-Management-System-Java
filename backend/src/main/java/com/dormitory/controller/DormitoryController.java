@@ -12,6 +12,7 @@ import com.dormitory.repository.CheckInOutRepository;
 import com.dormitory.repository.DormBuildingRepository;
 import com.dormitory.repository.RoomRepository;
 import com.dormitory.repository.StudentRepository;
+import com.dormitory.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +40,12 @@ public class DormitoryController {
 
     @Autowired
     private CheckInOutRepository checkInOutRepository;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
+    private com.dormitory.service.AuditService auditService;
 
     @GetMapping
     public List<DormBuilding> getAllBuildings() {
@@ -143,7 +150,110 @@ public class DormitoryController {
         if (room.getCurrentOccupancy() == null) {
             room.setCurrentOccupancy(0);
         }
-        return roomRepository.save(room);
+        Room savedRoom = roomRepository.save(room);
+        
+        // Automatically create beds based on room capacity
+        int capacity = room.getCapacity() != null ? room.getCapacity() : 0;
+        for (int i = 1; i <= capacity; i++) {
+            Bed bed = new Bed();
+            bed.setRoomID(savedRoom.getRoomID());
+            bed.setBedNumber(String.valueOf(i));
+            bed.setStatus("Available");
+            bedRepository.save(bed);
+        }
+        
+        return savedRoom;
+    }
+
+    /**
+     * Update room - also manages beds when capacity changes
+     */
+    @PutMapping("/rooms/{id}")
+    public ResponseEntity<?> updateRoom(@PathVariable Integer id, @RequestBody Room roomDetails) {
+        return roomRepository.findById(id).map(room -> {
+            int oldCapacity = room.getCapacity() != null ? room.getCapacity() : 0;
+            int newCapacity = roomDetails.getCapacity() != null ? roomDetails.getCapacity() : 0;
+            
+            // Update room fields
+            room.setRoomNumber(roomDetails.getRoomNumber());
+            room.setCapacity(roomDetails.getCapacity());
+            room.setRoomType(roomDetails.getRoomType());
+            
+            // Handle capacity changes
+            if (newCapacity > oldCapacity) {
+                // Add new beds
+                for (int i = oldCapacity + 1; i <= newCapacity; i++) {
+                    Bed bed = new Bed();
+                    bed.setRoomID(id);
+                    bed.setBedNumber(String.valueOf(i));
+                    bed.setStatus("Available");
+                    bedRepository.save(bed);
+                }
+            } else if (newCapacity < oldCapacity) {
+                // Remove excess beds (only if they are available)
+                List<Bed> beds = bedRepository.findAll().stream()
+                        .filter(b -> b.getRoomID().equals(id))
+                        .sorted((a, b) -> Integer.compare(
+                                Integer.parseInt(b.getBedNumber()), 
+                                Integer.parseInt(a.getBedNumber())))
+                        .toList();
+                
+                int bedsToRemove = oldCapacity - newCapacity;
+                int removed = 0;
+                for (Bed bed : beds) {
+                    if (removed >= bedsToRemove) break;
+                    if ("Available".equalsIgnoreCase(bed.getStatus())) {
+                        bedRepository.delete(bed);
+                        removed++;
+                    }
+                }
+                
+                // Update current occupancy if needed
+                long actualOccupied = bedRepository.findAll().stream()
+                        .filter(b -> b.getRoomID().equals(id) && "Occupied".equalsIgnoreCase(b.getStatus()))
+                        .count();
+                room.setCurrentOccupancy((int) actualOccupied);
+            }
+            
+            return ResponseEntity.ok(roomRepository.save(room));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Sync beds for all rooms - creates missing beds based on room capacity
+     * This is useful to fix existing rooms that were created without beds
+     */
+    @PostMapping("/sync-beds")
+    public ResponseEntity<?> syncBeds() {
+        int bedsCreated = 0;
+        List<Room> rooms = roomRepository.findAll();
+        
+        for (Room room : rooms) {
+            int capacity = room.getCapacity() != null ? room.getCapacity() : 0;
+            
+            // Get existing beds for this room
+            List<Bed> existingBeds = bedRepository.findAll().stream()
+                    .filter(b -> b.getRoomID().equals(room.getRoomID()))
+                    .toList();
+            
+            // Create missing beds
+            for (int i = 1; i <= capacity; i++) {
+                String bedNumber = String.valueOf(i);
+                boolean exists = existingBeds.stream()
+                        .anyMatch(b -> bedNumber.equals(b.getBedNumber()));
+                
+                if (!exists) {
+                    Bed bed = new Bed();
+                    bed.setRoomID(room.getRoomID());
+                    bed.setBedNumber(bedNumber);
+                    bed.setStatus("Available");
+                    bedRepository.save(bed);
+                    bedsCreated++;
+                }
+            }
+        }
+        
+        return ResponseEntity.ok(String.format("Synced beds. Created %d new beds.", bedsCreated));
     }
 
     @DeleteMapping("/rooms/{id}")
@@ -225,6 +335,14 @@ public class DormitoryController {
         checkInOut.setStatus("CurrentlyLiving");
         checkInOutRepository.save(checkInOut);
 
+        // Send email notification
+        emailService.sendCheckInNotification(student, building.getBuildingName(), room.getRoomNumber(), bed.getBedNumber());
+
+        // Audit log
+        auditService.logCheckIn(student.getStudentID(), 
+            String.format("Checked into %s Room %s Bed %s", building.getBuildingName(), room.getRoomNumber(), bed.getBedNumber()), 
+            "system");
+
         return ResponseEntity.ok("Check-in successful");
     }
 
@@ -257,6 +375,12 @@ public class DormitoryController {
             student.setRoomNumber(null);
             student.setBedNumber(null);
             studentRepository.save(student);
+
+            // Send email notification
+            emailService.sendCheckOutNotification(student);
+
+            // Audit log
+            auditService.logCheckOut(studentId, "Checked out of dormitory", "system");
         }
 
         // 4. Update CheckInOut Record

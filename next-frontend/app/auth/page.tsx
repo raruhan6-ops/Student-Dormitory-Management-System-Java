@@ -6,7 +6,6 @@ export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('Student')
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -43,12 +42,13 @@ export default function AuthPage() {
         })
         const data = await res.json()
         if (!res.ok) throw new Error(typeof data === 'string' ? data : (data?.message || 'Login failed'))
-        // Cookie is set by backend (HttpOnly). Redirect.
+        // Cookie is set by backend (HttpOnly). Redirect based on role.
         setMessage('Login successful, redirecting…')
-        setTimeout(() => { window.location.href = '/dashboard' }, 600)
+        const redirectUrl = data.role === 'Student' ? '/profile' : '/dashboard'
+        setTimeout(() => { window.location.href = redirectUrl }, 600)
       } else {
-        // Backend expects password in passwordHash
-        const payload = { username, passwordHash: password, role }
+        // Backend expects password in passwordHash - force role to Student
+        const payload = { username, passwordHash: password, role: 'Student' }
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -56,7 +56,13 @@ export default function AuthPage() {
         })
         const data = await res.text()
         if (!res.ok) throw new Error(data || 'Register failed')
-        setMessage('Signup successful')
+        setMessage('Signup successful! Redirecting to login…')
+        // Switch to login mode after successful signup
+        setTimeout(() => {
+          setMode('login')
+          setPassword('')
+          loadCaptcha()
+        }, 1500)
       }
     } catch (e: any) {
       setMessage(e?.message || 'Something went wrong')
@@ -133,15 +139,10 @@ export default function AuthPage() {
           {mode === 'signup' && (
             <div>
               <label className="mb-1 block text-sm">Role</label>
-              <select
-                className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="Student">Student</option>
-                <option value="DormManager">DormManager</option>
-                <option value="Admin">Admin</option>
-              </select>
+              <div className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                Student
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Only student accounts can be created through signup</p>
             </div>
           )}
 

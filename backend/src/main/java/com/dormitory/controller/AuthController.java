@@ -43,6 +43,85 @@ public class AuthController {
         return userAccountRepository.findAll();
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@CookieValue(name = "auth", required = false) String authToken) {
+        if (authToken == null || authToken.isEmpty()) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+        
+        try {
+            // Verify and decode token
+            String[] parts = authToken.split("\\.");
+            if (parts.length != 2) {
+                return ResponseEntity.status(401).body("Invalid token format");
+            }
+            
+            String payloadB64 = parts[0];
+            String sigB64 = parts[1];
+            
+            // Verify signature
+            byte[] expectedSig = hmacSha256(payloadB64.getBytes(java.nio.charset.StandardCharsets.UTF_8), 
+                                           authSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String expectedSigB64 = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(expectedSig);
+            
+            if (!sigB64.equals(expectedSigB64)) {
+                return ResponseEntity.status(401).body("Invalid token signature");
+            }
+            
+            // Decode payload
+            byte[] payloadBytes = java.util.Base64.getUrlDecoder().decode(payloadB64);
+            String payload = new String(payloadBytes, java.nio.charset.StandardCharsets.UTF_8);
+            
+            // Parse JSON manually (simple approach)
+            String username = extractJsonValue(payload, "username");
+            String role = extractJsonValue(payload, "role");
+            String expStr = extractJsonValue(payload, "exp");
+            
+            // Check expiration
+            long exp = Long.parseLong(expStr);
+            if (System.currentTimeMillis() / 1000L > exp) {
+                return ResponseEntity.status(401).body("Token expired");
+            }
+            
+            // Get user from database
+            UserAccount user = userAccountRepository.findByUsername(username).orElse(null);
+            if (user == null) {
+                return ResponseEntity.status(401).body("User not found");
+            }
+            
+            return ResponseEntity.ok(new LoginResponse(
+                user.getUserID(),
+                user.getUsername(),
+                user.getRole(),
+                user.getRelatedStudentID()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid token");
+        }
+    }
+    
+    private String extractJsonValue(String json, String key) {
+        String searchKey = "\"" + key + "\":";
+        int keyIndex = json.indexOf(searchKey);
+        if (keyIndex == -1) return null;
+        
+        int valueStart = keyIndex + searchKey.length();
+        if (json.charAt(valueStart) == '"') {
+            // String value
+            valueStart++;
+            int valueEnd = json.indexOf('"', valueStart);
+            return json.substring(valueStart, valueEnd);
+        } else {
+            // Number or other value
+            int valueEnd = valueStart;
+            while (valueEnd < json.length() && 
+                   (Character.isDigit(json.charAt(valueEnd)) || json.charAt(valueEnd) == '-')) {
+                valueEnd++;
+            }
+            return json.substring(valueStart, valueEnd);
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         // Validate Captcha

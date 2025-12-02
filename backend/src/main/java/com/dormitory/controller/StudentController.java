@@ -2,6 +2,7 @@ package com.dormitory.controller;
 
 import com.dormitory.entity.Student;
 import com.dormitory.repository.StudentRepository;
+import com.dormitory.service.AuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,9 @@ public class StudentController {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Autowired
+    private AuditService auditService;
+
     @GetMapping
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
@@ -22,7 +26,10 @@ public class StudentController {
 
     @PostMapping
     public Student createStudent(@RequestBody Student student) {
-        return studentRepository.save(student);
+        Student saved = studentRepository.save(student);
+        auditService.logCreate("Student", saved.getStudentID(), 
+            "Created student: " + saved.getName(), "system");
+        return saved;
     }
 
     @GetMapping("/{id}")
@@ -42,12 +49,19 @@ public class StudentController {
             student.setDormBuilding(studentDetails.getDormBuilding());
             student.setRoomNumber(studentDetails.getRoomNumber());
             student.setBedNumber(studentDetails.getBedNumber());
-            return studentRepository.save(student);
+            Student updated = studentRepository.save(student);
+            auditService.logUpdate("Student", id, 
+                "Updated student: " + student.getName(), "system");
+            return updated;
         }).orElse(null);
     }
 
     @DeleteMapping("/{id}")
     public void deleteStudent(@PathVariable String id) {
+        studentRepository.findById(id).ifPresent(student -> {
+            auditService.logDelete("Student", id, 
+                "Deleted student: " + student.getName(), "system");
+        });
         studentRepository.deleteById(id);
     }
 }

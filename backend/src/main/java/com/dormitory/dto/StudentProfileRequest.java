@@ -1,29 +1,16 @@
-package com.dormitory.entity;
+package com.dormitory.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Data;
 
-@Entity
-@Table(name = "Student")
 @Data
-public class Student {
-    @Id
+public class StudentProfileRequest {
     private String studentID;
     private String name;
     private String gender;
     private String major;
-    
-    @jakarta.persistence.Column(name = "Class")
-    private String studentClass; // 'class' is a reserved keyword in Java
-    
+    private String studentClass;
     private Integer enrollmentYear;
     private String phone;
-
-    private String dormBuilding;
-    private String roomNumber;
-    private String bedNumber;
     private String email;
 
     public String getStudentID() {
@@ -80,30 +67,6 @@ public class Student {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getDormBuilding() {
-        return dormBuilding;
-    }
-
-    public void setDormBuilding(String dormBuilding) {
-        this.dormBuilding = dormBuilding;
-    }
-
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
-    }
-
-    public String getBedNumber() {
-        return bedNumber;
-    }
-
-    public void setBedNumber(String bedNumber) {
-        this.bedNumber = bedNumber;
     }
 
     public String getEmail() {

@@ -42,19 +42,37 @@ async function verifyTokenEdge(token: string, secret: string): Promise<{ role: s
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
-  if (pathname.startsWith('/dashboard')) {
-    const token = req.cookies.get('auth')?.value
-    const secret = process.env.AUTH_SECRET || 'change-me'
-    if (!token) return NextResponse.redirect(new URL('/auth', req.url))
-    const verified = await verifyTokenEdge(token, secret)
-    const role = verified?.role
-    if (!role || (role !== 'Admin' && role !== 'DormManager' && role !== 'Student')) {
-      return NextResponse.redirect(new URL('/auth', req.url))
-    }
+  const token = req.cookies.get('auth')?.value
+  const secret = process.env.AUTH_SECRET || 'change-me'
+
+  // Protected routes that require authentication
+  const protectedPaths = ['/dashboard', '/students', '/buildings', '/checkin', '/repairs', '/profile', '/admin', '/batch', '/apply-room']
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
+
+  if (!isProtected) return NextResponse.next()
+
+  if (!token) return NextResponse.redirect(new URL('/auth', req.url))
+
+  const verified = await verifyTokenEdge(token, secret)
+  const role = verified?.role
+
+  if (!role) return NextResponse.redirect(new URL('/auth', req.url))
+
+  // Role-based access control
+  const staffOnly = ['/students', '/buildings', '/checkin', '/batch', '/dashboard']
+  const adminOnly = ['/admin']
+
+  if (staffOnly.some((p) => pathname.startsWith(p)) && role !== 'Admin' && role !== 'DormManager') {
+    return NextResponse.redirect(new URL('/profile', req.url))
   }
+
+  if (adminOnly.some((p) => pathname.startsWith(p)) && role !== 'Admin') {
+    return NextResponse.redirect(new URL('/profile', req.url))
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/dashboard/:path*', '/students/:path*', '/buildings/:path*', '/checkin/:path*', '/repairs/:path*', '/profile/:path*', '/admin/:path*', '/batch/:path*', '/apply-room/:path*'],
 }
