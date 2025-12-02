@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
     Grid, Paper, Typography, List, ListItemButton, ListItemText, 
-    ListItemAvatar, Avatar, Chip, Divider, Box, Alert, CircularProgress, TextField, InputAdornment
+    ListItemAvatar, Avatar, Chip, Divider, Box, Alert, CircularProgress, 
+    TextField, InputAdornment, IconButton, Button, Dialog, DialogTitle, 
+    DialogContent, DialogActions 
 } from '@mui/material';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import HotelIcon from '@mui/icons-material/Hotel';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
 
 const DormitoryList = ({ showNotification }) => {
     const [buildings, setBuildings] = useState([]);
@@ -20,6 +23,13 @@ const DormitoryList = ({ showNotification }) => {
     const [loadingRooms, setLoadingRooms] = useState(false);
     const [loadingBeds, setLoadingBeds] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Dialog States
+    const [openBuildingDialog, setOpenBuildingDialog] = useState(false);
+    const [newBuilding, setNewBuilding] = useState({ buildingName: '', location: '', managerName: '', managerPhone: '' });
+
+    const [openRoomDialog, setOpenRoomDialog] = useState(false);
+    const [newRoom, setNewRoom] = useState({ roomNumber: '', capacity: 4, roomType: 'Standard' });
 
     useEffect(() => {
         fetchBuildings();
@@ -68,6 +78,36 @@ const DormitoryList = ({ showNotification }) => {
         }
     };
 
+    // --- Building Management ---
+    const handleAddBuilding = async () => {
+        try {
+            await axios.post('/api/dormitories', newBuilding);
+            showNotification('Building added successfully!', 'success');
+            setOpenBuildingDialog(false);
+            setNewBuilding({ buildingName: '', location: '', managerName: '', managerPhone: '' });
+            fetchBuildings();
+        } catch (error) {
+            console.error('Error adding building:', error);
+            showNotification('Failed to add building.', 'error');
+        }
+    };
+
+    // --- Room Management ---
+    const handleAddRoom = async () => {
+        if (!selectedBuilding) return;
+        try {
+            await axios.post(`/api/dormitories/${selectedBuilding.buildingID}/rooms`, newRoom);
+            showNotification('Room added successfully!', 'success');
+            setOpenRoomDialog(false);
+            setNewRoom({ roomNumber: '', capacity: 4, roomType: 'Standard' });
+            // Refresh rooms
+            handleBuildingClick(selectedBuilding);
+        } catch (error) {
+            console.error('Error adding room:', error);
+            showNotification('Failed to add room.', 'error');
+        }
+    };
+
     const filteredBuildings = buildings.filter(building => 
         building.buildingName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         building.location.toLowerCase().includes(searchTerm.toLowerCase())
@@ -83,7 +123,12 @@ const DormitoryList = ({ showNotification }) => {
                 <Grid item xs={12} md={4} sx={{ height: '100%' }}>
                     <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
-                            <Typography variant="h6">宿舍楼 (Buildings)</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="h6">宿舍楼 (Buildings)</Typography>
+                                <IconButton size="small" sx={{ color: 'white' }} onClick={() => setOpenBuildingDialog(true)}>
+                                    <AddIcon />
+                                </IconButton>
+                            </Box>
                             <TextField 
                                 fullWidth 
                                 variant="outlined" 
@@ -135,7 +180,14 @@ const DormitoryList = ({ showNotification }) => {
                 <Grid item xs={12} md={4} sx={{ height: '100%' }}>
                     <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{ p: 2, bgcolor: 'secondary.main', color: 'white' }}>
-                            <Typography variant="h6">房间 (Rooms)</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="h6">房间 (Rooms)</Typography>
+                                {selectedBuilding && (
+                                    <IconButton size="small" sx={{ color: 'white' }} onClick={() => setOpenRoomDialog(true)}>
+                                        <AddIcon />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </Box>
                         {selectedBuilding ? (
                             loadingRooms ? (
@@ -227,6 +279,80 @@ const DormitoryList = ({ showNotification }) => {
                     </Paper>
                 </Grid>
             </Grid>
+
+            {/* Add Building Dialog */}
+            <Dialog open={openBuildingDialog} onClose={() => setOpenBuildingDialog(false)}>
+                <DialogTitle>Add New Building</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Building Name"
+                        fullWidth
+                        value={newBuilding.buildingName}
+                        onChange={(e) => setNewBuilding({ ...newBuilding, buildingName: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Location"
+                        fullWidth
+                        value={newBuilding.location}
+                        onChange={(e) => setNewBuilding({ ...newBuilding, location: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Manager Name"
+                        fullWidth
+                        value={newBuilding.managerName}
+                        onChange={(e) => setNewBuilding({ ...newBuilding, managerName: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Manager Phone"
+                        fullWidth
+                        value={newBuilding.managerPhone}
+                        onChange={(e) => setNewBuilding({ ...newBuilding, managerPhone: e.target.value })}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenBuildingDialog(false)}>Cancel</Button>
+                    <Button onClick={handleAddBuilding} variant="contained">Add</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Add Room Dialog */}
+            <Dialog open={openRoomDialog} onClose={() => setOpenRoomDialog(false)}>
+                <DialogTitle>Add New Room</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Room Number"
+                        fullWidth
+                        value={newRoom.roomNumber}
+                        onChange={(e) => setNewRoom({ ...newRoom, roomNumber: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Capacity"
+                        type="number"
+                        fullWidth
+                        value={newRoom.capacity}
+                        onChange={(e) => setNewRoom({ ...newRoom, capacity: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Room Type"
+                        fullWidth
+                        value={newRoom.roomType}
+                        onChange={(e) => setNewRoom({ ...newRoom, roomType: e.target.value })}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenRoomDialog(false)}>Cancel</Button>
+                    <Button onClick={handleAddRoom} variant="contained">Add</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

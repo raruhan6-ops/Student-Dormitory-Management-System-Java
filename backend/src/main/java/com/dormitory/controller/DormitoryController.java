@@ -89,4 +89,34 @@ public class DormitoryController {
             return dto;
         }).collect(Collectors.toList());
     }
+
+    // --- Building Management ---
+
+    @PostMapping
+    public DormBuilding addBuilding(@RequestBody DormBuilding building) {
+        return buildingRepository.save(building);
+    }
+
+    @PutMapping("/{id}")
+    public DormBuilding updateBuilding(@PathVariable Integer id, @RequestBody DormBuilding buildingDetails) {
+        return buildingRepository.findById(id).map(building -> {
+            building.setBuildingName(buildingDetails.getBuildingName());
+            building.setLocation(buildingDetails.getLocation());
+            building.setManagerName(buildingDetails.getManagerName());
+            building.setManagerPhone(buildingDetails.getManagerPhone());
+            return buildingRepository.save(building);
+        }).orElse(null);
+    }
+
+    // --- Room Management ---
+
+    @PostMapping("/{buildingId}/rooms")
+    public Room addRoom(@PathVariable Integer buildingId, @RequestBody Room room) {
+        room.setBuildingID(buildingId);
+        // Initialize occupancy if not provided
+        if (room.getCurrentOccupancy() == null) {
+            room.setCurrentOccupancy(0);
+        }
+        return roomRepository.save(room);
+    }
 }
