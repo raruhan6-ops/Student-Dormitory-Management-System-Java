@@ -1,10 +1,16 @@
--- Triggers for Automatic Consistency (idempotent)
+-- Bonus Features: Triggers and Views for Dormitory System
+-- This script is idempotent (safe to run multiple times)
+-- NOTE: Uses PascalCase table names to match schema.sql definitions
 
--- Drop existing objects if they exist to allow re-running this script safely
+-- Drop existing triggers if they exist
 DROP TRIGGER IF EXISTS trg_after_checkin;
 DROP TRIGGER IF EXISTS trg_after_checkout;
-DROP VIEW IF EXISTS vw_current_accommodation;
-DROP VIEW IF EXISTS vw_room_occupancy;
+
+-- =============================================
+-- Triggers for Automatic Data Consistency
+-- =============================================
+-- Note: These triggers auto-update bed status and room occupancy
+-- when check-in/check-out operations occur
 
 DELIMITER //
 
@@ -14,57 +20,58 @@ AFTER INSERT ON CheckInOut
 FOR EACH ROW
 BEGIN
     IF NEW.Status = 'CurrentlyLiving' THEN
-        -- Update Bed Status (Bed table is lowercase/snake_case)
-        UPDATE Bed SET status = 'Occupied' WHERE bedid = NEW.BedID;
-        -- Increment Room Occupancy (Room table is lowercase/snake_case)
-        UPDATE Room SET current_occupancy = current_occupancy + 1 
-        WHERE roomid = (SELECT roomid FROM Bed WHERE bedid = NEW.BedID);
+        -- Update Bed Status to Occupied
+        UPDATE Bed SET Status = 'Occupied' WHERE BedID = NEW.BedID;
+        -- Increment Room Occupancy
+        UPDATE Room SET CurrentOccupancy = CurrentOccupancy + 1 
+        WHERE RoomID = (SELECT RoomID FROM Bed WHERE BedID = NEW.BedID);
     END IF;
 END //
 
--- Trigger 2: On Check-Out (Update CheckInOut)
+-- Trigger 2: On Check-Out (Update CheckInOut status)
 CREATE TRIGGER trg_after_checkout
 AFTER UPDATE ON CheckInOut
 FOR EACH ROW
 BEGIN
     IF NEW.Status = 'CheckedOut' AND OLD.Status = 'CurrentlyLiving' THEN
-        -- Update Bed Status
-        UPDATE Bed SET status = 'Available' WHERE bedid = NEW.BedID;
+        -- Update Bed Status to Available
+        UPDATE Bed SET Status = 'Available' WHERE BedID = NEW.BedID;
         -- Decrement Room Occupancy
-        UPDATE Room SET current_occupancy = current_occupancy - 1 
-        WHERE roomid = (SELECT roomid FROM Bed WHERE bedid = NEW.BedID);
+        UPDATE Room SET CurrentOccupancy = GREATEST(0, CurrentOccupancy - 1) 
+        WHERE RoomID = (SELECT RoomID FROM Bed WHERE BedID = NEW.BedID);
     END IF;
 END //
 
 DELIMITER ;
 
--- Database Views
+-- =============================================
+-- Stored Procedure: Recalculate Room Occupancy
+-- =============================================
+-- This procedure syncs CurrentOccupancy with actual check-in data
+-- Useful for fixing any inconsistencies in the data
 
--- View 1: Current Accommodation Details
-CREATE OR REPLACE VIEW vw_current_accommodation AS
-SELECT 
-    s.studentid AS StudentID,
-    s.name AS StudentName,
-    s.major,
-    s.class,
-    b.BuildingName,
-    r.room_number AS RoomNumber,
-    bd.bed_number AS BedNumber,
-    c.CheckInDate
-FROM CheckInOut c
-JOIN Student s ON c.StudentID = s.studentid
-JOIN Bed bd ON c.BedID = bd.bedid
-JOIN Room r ON bd.roomid = r.roomid
-JOIN DormBuilding b ON r.buildingid = b.BuildingID
-WHERE c.Status = 'CurrentlyLiving';
+DELIMITER //
 
--- View 2: Room Occupancy Statistics
-CREATE OR REPLACE VIEW vw_room_occupancy AS
-SELECT 
-    b.BuildingName,
-    r.room_number AS RoomNumber,
-    r.capacity,
-    r.current_occupancy AS CurrentOccupancy,
-    ROUND((r.current_occupancy / r.capacity) * 100, 2) AS OccupancyRate
-FROM Room r
-JOIN DormBuilding b ON r.buildingid = b.BuildingID;
+CREATE PROCEDURE IF NOT EXISTS sp_sync_room_occupancy()
+BEGIN
+    -- Update all rooms' CurrentOccupancy based on actual CheckInOut records
+    UPDATE Room r
+    SET CurrentOccupancy = (
+        SELECT COUNT(*)
+        FROM CheckInOut c
+        JOIN Bed b ON c.BedID = b.BedID
+        WHERE b.RoomID = r.RoomID AND c.Status = 'CurrentlyLiving'
+    );
+    
+    -- Also sync Bed status
+    UPDATE Bed b
+    SET Status = CASE 
+        WHEN EXISTS (
+            SELECT 1 FROM CheckInOut c 
+            WHERE c.BedID = b.BedID AND c.Status = 'CurrentlyLiving'
+        ) THEN 'Occupied'
+        ELSE 'Available'
+    END;
+END //
+
+DELIMITER ;

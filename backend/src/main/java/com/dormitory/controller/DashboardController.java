@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/stats")
-@CrossOrigin(origins = "*")
 public class DashboardController {
 
     @Autowired private StudentRepository studentRepository;

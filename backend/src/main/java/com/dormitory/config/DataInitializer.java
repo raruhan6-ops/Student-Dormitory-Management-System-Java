@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.List;
 
 @Configuration
 public class DataInitializer {
@@ -88,10 +89,6 @@ public class DataInitializer {
                                 bed.setBedNumber(cleanBedNum);
                                 bed.setStatus("Occupied");
                                 bedRepository.save(bed);
-                                
-                                // Update room occupancy
-                                room.setCurrentOccupancy(room.getCurrentOccupancy() + 1);
-                                roomRepository.save(room);
                             }
                         }
                         
@@ -107,12 +104,47 @@ public class DataInitializer {
                         }
                     }
                 }
+                
+                // Sync room occupancy with actual occupied beds count
+                syncRoomOccupancy(roomRepository, bedRepository);
+                
                 System.out.println("Database initialization check complete.");
             } catch (Exception e) {
                 System.err.println("Error initializing data: " + e.getMessage());
                 e.printStackTrace();
             }
         };
+    }
+
+    /**
+     * Sync room occupancy counts with actual occupied bed counts.
+     * This ensures data consistency between Room.currentOccupancy and actual Bed status.
+     */
+    private void syncRoomOccupancy(RoomRepository roomRepository, BedRepository bedRepository) {
+        System.out.println("Syncing room occupancy data...");
+        List<Room> allRooms = roomRepository.findAll();
+        int updatedCount = 0;
+        
+        for (Room room : allRooms) {
+            // Count occupied beds for this room
+            List<Bed> beds = bedRepository.findByRoomID(room.getRoomID());
+            int occupiedCount = (int) beds.stream()
+                    .filter(b -> "Occupied".equalsIgnoreCase(b.getStatus()))
+                    .count();
+            
+            // Update if different
+            if (room.getCurrentOccupancy() == null || room.getCurrentOccupancy() != occupiedCount) {
+                room.setCurrentOccupancy(occupiedCount);
+                roomRepository.save(room);
+                updatedCount++;
+            }
+        }
+        
+        if (updatedCount > 0) {
+            System.out.println("Updated occupancy for " + updatedCount + " rooms.");
+        } else {
+            System.out.println("Room occupancy data is consistent.");
+        }
     }
 
     private String hashPassword(String password) {

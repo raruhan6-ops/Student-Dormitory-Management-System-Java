@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, Search, X, Users, Download, RefreshCw, AlertCircle } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { Plus, Pencil, Trash2, Search, X, Users, Download, RefreshCw, AlertCircle, Sparkles, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react'
+import Fuse from 'fuse.js'
 
 type Student = {
   studentID: string
@@ -26,18 +27,60 @@ const emptyStudent: Omit<Student, 'studentID'> & { studentID: string } = {
   enrollmentYear: new Date().getFullYear(),
 }
 
+// Fuse.js configuration for fuzzy search
+const fuseOptions: Fuse.IFuseOptions<Student> = {
+  keys: [
+    { name: 'studentID', weight: 0.3 },
+    { name: 'name', weight: 0.3 },
+    { name: 'major', weight: 0.2 },
+    { name: 'studentClass', weight: 0.15 },
+    { name: 'phone', weight: 0.05 },
+  ],
+  threshold: 0.4, // 0 = exact match, 1 = match anything
+  distance: 100,
+  includeScore: true,
+  includeMatches: true,
+  minMatchCharLength: 1,
+  ignoreLocation: true,
+}
+
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([])
-  const [filtered, setFiltered] = useState<Student[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [useFuzzy, setUseFuzzy] = useState(true)
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [form, setForm] = useState<Student>(emptyStudent as Student)
   const [saving, setSaving] = useState(false)
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
+
+  // Create Fuse instance when students change
+  const fuse = useMemo(() => new Fuse(students, fuseOptions), [students])
+
+  // Filtered results using fuzzy or exact search
+  const filtered = useMemo(() => {
+    if (!search.trim()) return students
+
+    if (useFuzzy) {
+      // Fuzzy search with Fuse.js
+      const results = fuse.search(search)
+      return results.map(result => result.item)
+    } else {
+      // Exact substring match (original behavior)
+      const q = search.toLowerCase()
+      return students.filter(
+        (s) =>
+          s.studentID?.toLowerCase().includes(q) ||
+          s.name?.toLowerCase().includes(q) ||
+          s.major?.toLowerCase().includes(q) ||
+          s.studentClass?.toLowerCase().includes(q)
+      )
+    }
+  }, [search, students, fuse, useFuzzy])
 
   const load = async () => {
     try {
@@ -55,19 +98,6 @@ export default function StudentsPage() {
   }
 
   useEffect(() => { load() }, [])
-
-  useEffect(() => {
-    const q = search.toLowerCase()
-    setFiltered(
-      students.filter(
-        (s) =>
-          s.studentID?.toLowerCase().includes(q) ||
-          s.name?.toLowerCase().includes(q) ||
-          s.major?.toLowerCase().includes(q) ||
-          s.studentClass?.toLowerCase().includes(q)
-      )
-    )
-  }, [search, students])
 
   const openAdd = () => {
     setForm(emptyStudent as Student)
@@ -122,6 +152,43 @@ export default function StudentsPage() {
     }
   }
 
+  // Export functions
+  const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
+    setExportMenuOpen(false)
+    try {
+      let endpoint = '/api/manager/export/students'
+      let filename = 'students'
+      
+      switch (format) {
+        case 'excel':
+          endpoint = '/api/manager/export/students/excel'
+          filename = 'students.xlsx'
+          break
+        case 'pdf':
+          endpoint = '/api/manager/export/students/pdf'
+          filename = 'students.pdf'
+          break
+        default:
+          filename = 'students.csv'
+      }
+      
+      const res = await fetch(endpoint, { credentials: 'include' })
+      if (!res.ok) throw new Error('导出失败')
+      
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (e: any) {
+      alert(e?.message || '导出失败')
+    }
+  }
+
   if (loading) {
     return (
       <div className="container-section">
@@ -168,6 +235,50 @@ export default function StudentsPage() {
           <button onClick={load} className="btn-ghost">
             <RefreshCw className="h-4 w-4" />
           </button>
+          
+          {/* Export Dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => setExportMenuOpen(!exportMenuOpen)}
+              className="btn-secondary"
+            >
+              <Download className="h-4 w-4" />
+              导出
+              <ChevronDown className={`h-4 w-4 transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {exportMenuOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setExportMenuOpen(false)}
+                />
+                <div className="absolute right-0 z-20 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    导出 CSV
+                  </button>
+                  <button
+                    onClick={() => handleExport('excel')}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    导出 Excel
+                  </button>
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    <FileText className="h-4 w-4 text-red-600" />
+                    导出 PDF
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          
           <button onClick={openAdd} className="btn-primary">
             <Plus className="h-4 w-4" />
             添加学生
@@ -181,16 +292,34 @@ export default function StudentsPage() {
           <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="搜索学号、姓名、专业或班级..."
-            className="input pl-10"
+            placeholder={useFuzzy ? "模糊搜索学号、姓名、专业..." : "精确搜索学号、姓名、专业..."}
+            className="input pl-10 pr-24"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {/* Fuzzy Search Toggle */}
+          <button
+            onClick={() => setUseFuzzy(!useFuzzy)}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-all ${
+              useFuzzy 
+                ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' 
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+            }`}
+            title={useFuzzy ? '点击切换到精确搜索' : '点击切换到模糊搜索'}
+          >
+            <Sparkles className={`h-3 w-3 ${useFuzzy ? 'text-primary-500' : ''}`} />
+            {useFuzzy ? '模糊' : '精确'}
+          </button>
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
           <span className="badge-info">
             共 {students.length} 人，显示 {filtered.length} 人
           </span>
+          {search && useFuzzy && (
+            <span className="text-xs text-primary-600 dark:text-primary-400">
+              ✨ 智能模糊匹配中
+            </span>
+          )}
         </div>
       </div>
 

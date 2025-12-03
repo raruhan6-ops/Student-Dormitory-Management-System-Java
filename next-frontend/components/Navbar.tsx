@@ -16,7 +16,8 @@ import {
   User,
   BedDouble,
   Bell,
-  Menu
+  Menu,
+  Flame
 } from 'lucide-react'
 
 export default function Navbar() {
@@ -33,6 +34,7 @@ export default function Navbar() {
 
   const staffLinks = [
     { href: '/dashboard', label: '仪表盘', icon: LayoutDashboard },
+    { href: '/heatmap', label: '入住热力图', icon: Flame },
     { href: '/students', label: '学生管理', icon: Users },
     { href: '/buildings', label: '楼栋管理', icon: Building2 },
     { href: '/checkin', label: '入住办理', icon: ClipboardCheck },

@@ -8,7 +8,6 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/stats")
-@CrossOrigin(origins = "*")
 public class StatsController {
 
     @Autowired

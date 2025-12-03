@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileCheck, RefreshCw, CheckCircle, XCircle, Clock, User, BedDouble, Building2, Calendar, AlertTriangle, X, ArrowLeft, FileX } from 'lucide-react';
+import { FileCheck, RefreshCw, CheckCircle, XCircle, Clock, User, BedDouble, Building2, Calendar, AlertTriangle, X, ArrowLeft, FileX, Search, Sparkles } from 'lucide-react';
+import Fuse from 'fuse.js';
 
 interface RoomApplication {
   applicationID: number;
@@ -21,6 +22,22 @@ interface RoomApplication {
   bedStatus: string;
 }
 
+// Fuse.js configuration for fuzzy search
+const fuseOptions: Fuse.IFuseOptions<RoomApplication> = {
+  keys: [
+    { name: 'studentID', weight: 0.3 },
+    { name: 'studentName', weight: 0.3 },
+    { name: 'major', weight: 0.2 },
+    { name: 'buildingName', weight: 0.1 },
+    { name: 'roomNumber', weight: 0.1 },
+  ],
+  threshold: 0.4,
+  distance: 100,
+  includeScore: true,
+  minMatchCharLength: 1,
+  ignoreLocation: true,
+};
+
 export default function ApplicationsPage() {
   const router = useRouter();
   const [applications, setApplications] = useState<RoomApplication[]>([]);
@@ -28,11 +45,34 @@ export default function ApplicationsPage() {
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('Pending');
   const [processing, setProcessing] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
+  const [useFuzzy, setUseFuzzy] = useState(true);
   const [rejectModal, setRejectModal] = useState<{ show: boolean; appId: number | null; reason: string }>({
     show: false,
     appId: null,
     reason: ''
   });
+
+  // Create Fuse instance
+  const fuse = useMemo(() => new Fuse(applications, fuseOptions), [applications]);
+
+  // Filtered applications with fuzzy search
+  const filteredApplications = useMemo(() => {
+    if (!search.trim()) return applications;
+
+    if (useFuzzy) {
+      return fuse.search(search).map(r => r.item);
+    } else {
+      const q = search.toLowerCase();
+      return applications.filter(a =>
+        a.studentID?.toLowerCase().includes(q) ||
+        a.studentName?.toLowerCase().includes(q) ||
+        a.major?.toLowerCase().includes(q) ||
+        a.buildingName?.toLowerCase().includes(q) ||
+        a.roomNumber?.toLowerCase().includes(q)
+      );
+    }
+  }, [applications, search, fuse, useFuzzy]);
 
   const fetchApplications = async () => {
     try {
@@ -234,8 +274,8 @@ export default function ApplicationsPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="mb-6">
+      {/* Filter Tabs and Search */}
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="tabs">
           {[
             { value: 'Pending', label: '待审核', icon: Clock },
@@ -258,6 +298,30 @@ export default function ApplicationsPage() {
             </button>
           ))}
         </div>
+
+        {/* Search Box with Fuzzy Toggle */}
+        <div className="relative max-w-xs flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder={useFuzzy ? "模糊搜索学号、姓名..." : "精确搜索学号、姓名..."}
+            className="input h-9 pl-9 pr-20 text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            onClick={() => setUseFuzzy(!useFuzzy)}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-all ${
+              useFuzzy 
+                ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' 
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+            }`}
+            title={useFuzzy ? '切换到精确搜索' : '切换到模糊搜索'}
+          >
+            <Sparkles className={`h-3 w-3 ${useFuzzy ? 'text-primary-500' : ''}`} />
+            {useFuzzy ? '模糊' : '精确'}
+          </button>
+        </div>
       </div>
 
       {/* Error Message */}
@@ -269,16 +333,26 @@ export default function ApplicationsPage() {
       )}
 
       {/* Applications Table/Cards */}
-      {applications.length === 0 ? (
+      {filteredApplications.length === 0 ? (
         <div className="card">
           <div className="empty-state py-12">
             <FileX className="empty-state-icon" />
-            <p className="empty-state-title">暂无{filterStatus === 'Pending' ? '待审核' : filterStatus === 'Approved' ? '已批准' : filterStatus === 'Rejected' ? '已拒绝' : ''}申请</p>
-            <p className="empty-state-description">符合筛选条件的申请将显示在此处。</p>
+            <p className="empty-state-title">
+              {search ? '未找到匹配的申请' : `暂无${filterStatus === 'Pending' ? '待审核' : filterStatus === 'Approved' ? '已批准' : filterStatus === 'Rejected' ? '已拒绝' : ''}申请`}
+            </p>
+            <p className="empty-state-description">
+              {search ? '请尝试其他搜索条件' : '符合筛选条件的申请将显示在此处。'}
+            </p>
           </div>
         </div>
       ) : (
         <div className="card overflow-hidden p-0">
+          {search && (
+            <div className="border-b border-gray-100 bg-gray-50 px-4 py-2 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+              找到 {filteredApplications.length} 条匹配结果
+              {useFuzzy && <span className="ml-2 text-primary-600 dark:text-primary-400">✨ 智能模糊匹配</span>}
+            </div>
+          )}
           <div className="table-container">
             <table className="table">
               <thead className="table-header">
@@ -291,7 +365,7 @@ export default function ApplicationsPage() {
                 </tr>
               </thead>
               <tbody className="table-body">
-                {applications.map((app) => (
+                {filteredApplications.map((app) => (
                   <tr key={app.applicationID} className="table-row">
                     <td className="table-cell">
                       <div className="flex items-center gap-3">

@@ -99,3 +99,43 @@ INSERT INTO Bed (RoomID, BedNumber) VALUES
 INSERT INTO UserAccount (Username, PasswordHash, Role) VALUES 
 ('admin', 'admin123', 'Admin'),
 ('manager', 'manager123', 'DormManager');
+
+-- =============================================
+-- Database Views for Reporting and Analytics
+-- =============================================
+
+-- View 1: Current Accommodation Details
+-- Shows all students currently living in dorms with their room info
+-- Note: These views use PascalCase table names as defined in schema
+-- For Hibernate snake_case tables, see bonus_features.sql
+CREATE OR REPLACE VIEW vw_current_accommodation AS
+SELECT 
+    s.StudentID,
+    s.Name AS StudentName,
+    s.Major,
+    s.Class,
+    db.BuildingName,
+    r.RoomNumber,
+    b.BedNumber,
+    c.CheckInDate
+FROM CheckInOut c
+JOIN Student s ON c.StudentID = s.StudentID
+JOIN Bed b ON c.BedID = b.BedID
+JOIN Room r ON b.RoomID = r.RoomID
+JOIN DormBuilding db ON r.BuildingID = db.BuildingID
+WHERE c.Status = 'CurrentlyLiving';
+
+-- View 2: Room Occupancy Statistics
+-- Shows occupancy rate for each room in each building
+CREATE OR REPLACE VIEW vw_room_occupancy AS
+SELECT 
+    db.BuildingName,
+    r.RoomNumber,
+    r.Capacity,
+    COALESCE(r.CurrentOccupancy, 0) AS CurrentOccupancy,
+    CASE 
+        WHEN r.Capacity > 0 THEN ROUND((COALESCE(r.CurrentOccupancy, 0) / r.Capacity) * 100, 2)
+        ELSE 0
+    END AS OccupancyRate
+FROM Room r
+JOIN DormBuilding db ON r.BuildingID = db.BuildingID;

@@ -7,10 +7,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface BedRepository extends JpaRepository<Bed, Integer> {
     Bed findByRoomIDAndBedNumber(Integer roomID, String bedNumber);
+    List<Bed> findByRoomID(Integer roomID);
     long countByStatus(String status);
+    long countByRoomIDAndStatus(Integer roomID, String status);
 
     /**
      * Atomically occupy a bed - only succeeds if bed is Available.

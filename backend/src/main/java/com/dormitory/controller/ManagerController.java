@@ -5,6 +5,8 @@ import com.dormitory.entity.RepairRequest;
 import com.dormitory.entity.Student;
 import com.dormitory.repository.RepairRequestRepository;
 import com.dormitory.repository.StudentRepository;
+import com.dormitory.security.RequiresRole;
+import com.dormitory.service.ExportService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +19,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Controller for manager-only operations.
+ * All endpoints require DormManager or Admin role.
+ */
 @RestController
 @RequestMapping("/api/manager")
-@CrossOrigin(origins = "*")
+@RequiresRole({"DormManager", "Admin"})
 public class ManagerController {
 
     @Autowired
@@ -27,6 +33,9 @@ public class ManagerController {
 
     @Autowired
     private RepairRequestRepository repairRequestRepository;
+
+    @Autowired
+    private ExportService exportService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -187,6 +196,70 @@ public class ManagerController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=repairs.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(bytes);
+    }
+
+    // --- Excel Export Endpoints ---
+
+    @GetMapping("/export/students/excel")
+    public ResponseEntity<byte[]> exportStudentsExcel() {
+        try {
+            List<Student> students = studentRepository.findAll();
+            byte[] excelData = exportService.exportStudentsToExcel(students);
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students.xlsx")
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(excelData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/export/repairs/excel")
+    public ResponseEntity<byte[]> exportRepairsExcel() {
+        try {
+            List<RepairRequest> repairs = repairRequestRepository.findAll();
+            byte[] excelData = exportService.exportRepairsToExcel(repairs);
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=repairs.xlsx")
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(excelData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // --- PDF Export Endpoints ---
+
+    @GetMapping("/export/students/pdf")
+    public ResponseEntity<byte[]> exportStudentsPdf() {
+        try {
+            List<Student> students = studentRepository.findAll();
+            byte[] pdfData = exportService.exportStudentsToPdf(students);
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=students.pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/export/repairs/pdf")
+    public ResponseEntity<byte[]> exportRepairsPdf() {
+        try {
+            List<RepairRequest> repairs = repairRequestRepository.findAll();
+            byte[] pdfData = exportService.exportRepairsToPdf(repairs);
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=repairs.pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfData);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     private String escape(String data) {

@@ -2,6 +2,7 @@ package com.dormitory.controller;
 
 import com.dormitory.entity.*;
 import com.dormitory.repository.*;
+import com.dormitory.security.RequiresRole;
 import com.dormitory.service.AuditService;
 import com.dormitory.service.EmailService;
 import com.dormitory.service.RoomBookingService;
@@ -17,11 +18,12 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * Controller for manager/admin to handle room applications
+ * Controller for manager/admin to handle room applications.
+ * Note: Role verification is now handled by RoleSecurityInterceptor,
+ * but we keep the manual checks as defense-in-depth.
  */
 @RestController
 @RequestMapping("/api/applications")
-@CrossOrigin(origins = "*")
 public class RoomApplicationController {
 
     @Value("${app.auth.secret:change-me}")
@@ -61,6 +63,7 @@ public class RoomApplicationController {
      * Get all room applications (for managers/admins)
      */
     @GetMapping
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> getAllApplications(
             @CookieValue(name = "auth", required = false) String authToken,
             @RequestParam(required = false) String status) {
@@ -70,7 +73,7 @@ public class RoomApplicationController {
             return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
         }
 
-        // Check if user is manager or admin
+        // Role check now handled by interceptor, but keeping as defense-in-depth
         UserAccount user = userAccountRepository.findByUsername(username).orElse(null);
         if (user == null || (!"DormManager".equals(user.getRole()) && !"Admin".equals(user.getRole()))) {
             return ResponseEntity.status(403).body(Map.of("error", "Only managers and admins can view applications"));
@@ -140,6 +143,7 @@ public class RoomApplicationController {
      * Uses RoomBookingService for thread-safe concurrent booking
      */
     @PostMapping("/{id}/approve")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> approveApplication(
             @CookieValue(name = "auth", required = false) String authToken,
             @PathVariable Integer id) {
@@ -214,6 +218,7 @@ public class RoomApplicationController {
      * Uses RoomBookingService to properly release reserved beds
      */
     @PostMapping("/{id}/reject")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> rejectApplication(
             @CookieValue(name = "auth", required = false) String authToken,
             @PathVariable Integer id,
@@ -266,6 +271,7 @@ public class RoomApplicationController {
      * Get pending applications count (for dashboard)
      */
     @GetMapping("/pending-count")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> getPendingCount(
             @CookieValue(name = "auth", required = false) String authToken) {
 

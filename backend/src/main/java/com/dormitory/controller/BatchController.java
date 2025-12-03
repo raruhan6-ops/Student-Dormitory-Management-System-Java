@@ -2,6 +2,7 @@ package com.dormitory.controller;
 
 import com.dormitory.entity.Student;
 import com.dormitory.repository.StudentRepository;
+import com.dormitory.security.RequiresRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,7 +16,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/batch")
-@CrossOrigin(origins = "*")
+@RequiresRole({"DormManager", "Admin"})  // Only managers/admins can perform batch operations
 public class BatchController {
 
     @Autowired

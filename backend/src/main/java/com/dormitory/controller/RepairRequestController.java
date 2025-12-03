@@ -4,6 +4,7 @@ import com.dormitory.entity.RepairRequest;
 import com.dormitory.entity.Student;
 import com.dormitory.repository.RepairRequestRepository;
 import com.dormitory.repository.StudentRepository;
+import com.dormitory.security.RequiresRole;
 import com.dormitory.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/repairs")
-@CrossOrigin(origins = "*")
 public class RepairRequestController {
 
     @Autowired
@@ -26,16 +26,19 @@ public class RepairRequestController {
     private EmailService emailService;
 
     @GetMapping
+    @RequiresRole({"DormManager", "Admin"})  // Only managers can view all repairs
     public List<RepairRequest> getAllRequests() {
         return repairRequestRepository.findAll();
     }
 
     @GetMapping("/student/{studentId}")
+    // Students can view their own repairs (additional check in interceptor or here)
     public List<RepairRequest> getRequestsByStudent(@PathVariable String studentId) {
         return repairRequestRepository.findBySubmitterStudentID(studentId);
     }
 
     @PostMapping
+    // Any authenticated user can submit a repair request
     public RepairRequest createRequest(@RequestBody RepairRequest request) {
         request.setSubmitTime(LocalDateTime.now());
         request.setStatus("Pending");
@@ -51,6 +54,7 @@ public class RepairRequestController {
     }
 
     @PutMapping("/{id}")
+    @RequiresRole({"DormManager", "Admin"})  // Only managers can update repair status
     public RepairRequest updateRequest(@PathVariable Integer id, @RequestBody RepairRequest requestDetails) {
         return repairRequestRepository.findById(id).map(request -> {
             String oldStatus = request.getStatus();

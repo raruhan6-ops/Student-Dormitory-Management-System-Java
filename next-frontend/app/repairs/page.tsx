@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { Plus, Wrench, CheckCircle, Clock, X, DoorOpen, User, Calendar, RefreshCw, Settings, AlertCircle } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { Plus, Wrench, CheckCircle, Clock, X, DoorOpen, User, Calendar, RefreshCw, Settings, AlertCircle, Search, Sparkles, Download, FileSpreadsheet, FileText, ChevronDown } from 'lucide-react'
+import Fuse from 'fuse.js'
 
 type RepairRequest = {
   repairID: number
@@ -14,10 +15,35 @@ type RepairRequest = {
   finishTime?: string
 }
 
+type UserInfo = {
+  username: string
+  role: string
+  studentId?: string
+}
+
+// Fuse.js configuration for fuzzy search
+const fuseOptions: Fuse.IFuseOptions<RepairRequest> = {
+  keys: [
+    { name: 'description', weight: 0.4 },
+    { name: 'submitterStudentID', weight: 0.3 },
+    { name: 'handler', weight: 0.2 },
+    { name: 'roomID', weight: 0.1 },
+  ],
+  threshold: 0.4,
+  distance: 100,
+  includeScore: true,
+  minMatchCharLength: 1,
+  ignoreLocation: true,
+}
+
 export default function RepairsPage() {
   const [requests, setRequests] = useState<RepairRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'Pending' | 'InProgress' | 'Finished'>('all')
+  const [search, setSearch] = useState('')
+  const [useFuzzy, setUseFuzzy] = useState(true)
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [isManager, setIsManager] = useState(false)
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false)
@@ -27,31 +53,99 @@ export default function RepairsPage() {
   // Handler modal
   const [handlerModal, setHandlerModal] = useState<RepairRequest | null>(null)
   const [handlerForm, setHandlerForm] = useState({ handler: '', status: 'InProgress' })
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
+
+  // Get current user info
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          setUserInfo(data)
+          setIsManager(data.role === 'Admin' || data.role === 'DormManager')
+          // Pre-fill student ID for students
+          if (data.role === 'Student' && data.studentId) {
+            setForm(prev => ({ ...prev, submitterStudentID: data.studentId }))
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    fetchUserInfo()
+  }, [])
 
   const load = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/repairs')
-      setRequests(await res.json())
-    } catch { /* ignore */ }
+      let endpoint = '/api/repairs'
+      
+      // Students can only see their own repairs
+      if (userInfo && userInfo.role === 'Student' && userInfo.studentId) {
+        endpoint = `/api/repairs/student/${userInfo.studentId}`
+      }
+      
+      const res = await fetch(endpoint, { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        // Ensure we always have an array
+        setRequests(Array.isArray(data) ? data : [])
+      } else {
+        // If unauthorized or error, set empty array
+        setRequests([])
+      }
+    } catch { 
+      setRequests([])
+    }
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { 
+    if (userInfo !== null) {
+      load() 
+    }
+  }, [userInfo])
 
-  const filtered = filter === 'all' ? requests : requests.filter((r) => r.status === filter)
+  // Create Fuse instance
+  const fuse = useMemo(() => new Fuse(requests, fuseOptions), [requests])
+
+  // Filter by status first, then search
+  const filtered = useMemo(() => {
+    let result = filter === 'all' ? requests : requests.filter((r) => r.status === filter)
+    
+    if (!search.trim()) return result
+
+    if (useFuzzy) {
+      const fuseFiltered = new Fuse(result, fuseOptions)
+      return fuseFiltered.search(search).map(r => r.item)
+    } else {
+      const q = search.toLowerCase()
+      return result.filter(r => 
+        r.description?.toLowerCase().includes(q) ||
+        r.submitterStudentID?.toLowerCase().includes(q) ||
+        r.handler?.toLowerCase().includes(q) ||
+        String(r.roomID).includes(q)
+      )
+    }
+  }, [requests, filter, search, useFuzzy])
 
   const handleSubmit = async () => {
     setSaving(true)
     try {
+      // Use the student's ID from userInfo if available
+      const submitterId = userInfo?.studentId || form.submitterStudentID
       const res = await fetch('/api/repairs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, roomID: Number(form.roomID) }),
+        credentials: 'include',
+        body: JSON.stringify({ 
+          roomID: Number(form.roomID),
+          submitterStudentID: submitterId,
+          description: form.description 
+        }),
       })
       if (!res.ok) throw new Error('Failed')
       setModalOpen(false)
-      setForm({ roomID: '', submitterStudentID: '', description: '' })
+      setForm({ roomID: '', submitterStudentID: userInfo?.studentId || '', description: '' })
       load()
     } catch {
       alert('提交报修请求出错')
@@ -72,6 +166,43 @@ export default function RepairsPage() {
       load()
     } catch {
       alert('更新出错')
+    }
+  }
+
+  // Export functions
+  const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
+    setExportMenuOpen(false)
+    try {
+      let endpoint = '/api/manager/export/repairs'
+      let filename = 'repairs'
+      
+      switch (format) {
+        case 'excel':
+          endpoint = '/api/manager/export/repairs/excel'
+          filename = 'repairs.xlsx'
+          break
+        case 'pdf':
+          endpoint = '/api/manager/export/repairs/pdf'
+          filename = 'repairs.pdf'
+          break
+        default:
+          filename = 'repairs.csv'
+      }
+      
+      const res = await fetch(endpoint, { credentials: 'include' })
+      if (!res.ok) throw new Error('导出失败')
+      
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (e: any) {
+      alert(e?.message || '导出失败')
     }
   }
 
@@ -117,10 +248,57 @@ export default function RepairsPage() {
             提交和跟踪宿舍设施维修请求
           </p>
         </div>
-        <button onClick={() => setModalOpen(true)} className="btn-primary">
-          <Plus className="h-4 w-4" />
-          新建报修
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Export Dropdown - Only for managers */}
+          {isManager && (
+            <div className="relative">
+              <button 
+                onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                className="btn-secondary"
+              >
+                <Download className="h-4 w-4" />
+                导出
+                <ChevronDown className={`h-4 w-4 transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {exportMenuOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setExportMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 z-20 mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                    <button
+                      onClick={() => handleExport('csv')}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      <FileText className="h-4 w-4 text-gray-500" />
+                      导出 CSV
+                    </button>
+                    <button
+                      onClick={() => handleExport('excel')}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                      导出 Excel
+                    </button>
+                    <button
+                      onClick={() => handleExport('pdf')}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                    >
+                      <FileText className="h-4 w-4 text-red-600" />
+                      导出 PDF
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          
+          <button onClick={() => setModalOpen(true)} className="btn-primary">
+            <Plus className="h-4 w-4" />
+            新建报修
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -164,7 +342,7 @@ export default function RepairsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="tabs">
           {([
             { value: 'all', label: '全部', count: requests.length },
@@ -185,6 +363,30 @@ export default function RepairsPage() {
               )}
             </button>
           ))}
+        </div>
+        
+        {/* Search Box */}
+        <div className="relative max-w-xs flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder={useFuzzy ? "模糊搜索描述、学号..." : "精确搜索描述、学号..."}
+            className="input h-9 pl-9 pr-20 text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            onClick={() => setUseFuzzy(!useFuzzy)}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium transition-all ${
+              useFuzzy 
+                ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' 
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+            }`}
+            title={useFuzzy ? '切换到精确搜索' : '切换到模糊搜索'}
+          >
+            <Sparkles className={`h-3 w-3 ${useFuzzy ? 'text-primary-500' : ''}`} />
+            {useFuzzy ? '模糊' : '精确'}
+          </button>
         </div>
       </div>
 
@@ -233,7 +435,7 @@ export default function RepairsPage() {
                         <p className="mt-2 text-gray-700 dark:text-gray-300">{r.description}</p>
                       </div>
                       
-                      {r.status !== 'Finished' && (
+                      {r.status !== 'Finished' && isManager && (
                         <button
                           onClick={() => { 
                             setHandlerModal(r)
@@ -314,8 +516,13 @@ export default function RepairsPage() {
                   placeholder="例如：20250001" 
                   className="input" 
                   value={form.submitterStudentID} 
-                  onChange={(e) => setForm({ ...form, submitterStudentID: e.target.value })} 
+                  onChange={(e) => setForm({ ...form, submitterStudentID: e.target.value })}
+                  readOnly={!!userInfo?.studentId}
+                  disabled={!!userInfo?.studentId}
                 />
+                {userInfo?.studentId && (
+                  <p className="mt-1 text-xs text-gray-500">学号已自动填入</p>
+                )}
               </div>
               <div>
                 <label className="input-label flex items-center gap-1.5">

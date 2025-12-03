@@ -2,6 +2,7 @@ package com.dormitory.controller;
 
 import com.dormitory.entity.AuditLog;
 import com.dormitory.repository.AuditLogRepository;
+import com.dormitory.security.RequiresRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/audit")
-@CrossOrigin(origins = "*")
+@RequiresRole({"DormManager", "Admin"})  // Only managers/admins can view audit logs
 public class AuditController {
 
     @Autowired

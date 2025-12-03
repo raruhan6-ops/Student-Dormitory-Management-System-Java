@@ -12,6 +12,7 @@ import com.dormitory.repository.CheckInOutRepository;
 import com.dormitory.repository.DormBuildingRepository;
 import com.dormitory.repository.RoomRepository;
 import com.dormitory.repository.StudentRepository;
+import com.dormitory.security.RequiresRole;
 import com.dormitory.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/dormitories")
-@CrossOrigin(origins = "*")
 public class DormitoryController {
 
     @Autowired
@@ -108,11 +108,13 @@ public class DormitoryController {
     // --- Building Management ---
 
     @PostMapping
+    @RequiresRole({"DormManager", "Admin"})
     public DormBuilding addBuilding(@RequestBody DormBuilding building) {
         return buildingRepository.save(building);
     }
 
     @PutMapping("/{id}")
+    @RequiresRole({"DormManager", "Admin"})
     public DormBuilding updateBuilding(@PathVariable Integer id, @RequestBody DormBuilding buildingDetails) {
         return buildingRepository.findById(id).map(building -> {
             building.setBuildingName(buildingDetails.getBuildingName());
@@ -124,6 +126,7 @@ public class DormitoryController {
     }
 
     @DeleteMapping("/{id}")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> deleteBuilding(@PathVariable Integer id) {
         if (!buildingRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
@@ -144,6 +147,7 @@ public class DormitoryController {
     // --- Room Management ---
 
     @PostMapping("/{buildingId}/rooms")
+    @RequiresRole({"DormManager", "Admin"})
     public Room addRoom(@PathVariable Integer buildingId, @RequestBody Room room) {
         room.setBuildingID(buildingId);
         // Initialize occupancy if not provided
@@ -169,6 +173,7 @@ public class DormitoryController {
      * Update room - also manages beds when capacity changes
      */
     @PutMapping("/rooms/{id}")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> updateRoom(@PathVariable Integer id, @RequestBody Room roomDetails) {
         return roomRepository.findById(id).map(room -> {
             int oldCapacity = room.getCapacity() != null ? room.getCapacity() : 0;
@@ -224,6 +229,7 @@ public class DormitoryController {
      * This is useful to fix existing rooms that were created without beds
      */
     @PostMapping("/sync-beds")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> syncBeds() {
         int bedsCreated = 0;
         List<Room> rooms = roomRepository.findAll();
@@ -257,6 +263,7 @@ public class DormitoryController {
     }
 
     @DeleteMapping("/rooms/{id}")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> deleteRoom(@PathVariable Integer id) {
         if (!roomRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
@@ -280,6 +287,7 @@ public class DormitoryController {
     // --- Check-In / Check-Out ---
 
     @PostMapping("/check-in")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> checkIn(@RequestBody CheckInRequest request) {
         // 1. Validate Student
         Student student = studentRepository.findById(request.getStudentID()).orElse(null);
@@ -347,6 +355,7 @@ public class DormitoryController {
     }
 
     @PostMapping("/check-out/{studentId}")
+    @RequiresRole({"DormManager", "Admin"})
     public ResponseEntity<?> checkOut(@PathVariable String studentId) {
         // 1. Find active check-in record
         CheckInOut record = checkInOutRepository.findByStudentIDAndStatus(studentId, "CurrentlyLiving");

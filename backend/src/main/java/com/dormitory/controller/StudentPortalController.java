@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/student-portal")
-@CrossOrigin(origins = "*")
 public class StudentPortalController {
 
     @Autowired

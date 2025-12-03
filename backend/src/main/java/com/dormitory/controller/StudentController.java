@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "*") // Allow requests from any frontend for development
 public class StudentController {
 
     @Autowired
