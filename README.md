@@ -1,4 +1,4 @@
-# 🏠 学生宿舍管理系统 | Student Dormitory Management System
+# 🎓 Student Dormitory Management System
 
 <div align="center">
 
@@ -7,266 +7,113 @@
 ![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-blue?style=for-the-badge&logo=mysql)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-**一个现代化的高校学生宿舍管理系统，支持多角色权限管理、智能房间分配、报修服务和数据分析。**
+**A modern, full-stack solution for university dormitory operations, featuring role-based access control, real-time occupancy tracking, and AI-powered assistance.**
 
-[功能特点](#-功能特点) • [技术栈](#-技术栈) • [快速开始](#-快速开始) • [API文档](#-api-文档) • [数据库设计](#-数据库设计)
+[View Demo](#-screenshots) • [Report Bug](https://github.com/raruhan6-ops/Student-Dormitory-Management-System-Java/issues) • [Request Feature](https://github.com/raruhan6-ops/Student-Dormitory-Management-System-Java/issues)
 
 </div>
 
 ---
 
-## 📋 目录
+## 📋 Table of Contents
 
-- [项目简介](#-项目简介)
-- [功能特点](#-功能特点)
-- [技术栈](#-技术栈)
-- [项目结构](#-项目结构)
-- [快速开始](#-快速开始)
-- [数据库设计](#-数据库设计)
-- [API文档](#-api-文档)
-- [系统架构](#-系统架构)
-- [安全特性](#-安全特性)
-- [Bonus功能](#-bonus功能实现)
-- [默认账户](#-默认账户)
-- [截图预览](#-截图预览)
+- [Project Overview](#-project-overview)
+- [Key Features](#-key-features)
+- [System Architecture](#-system-architecture)
+- [Tech Stack](#-tech-stack)
+- [Database Design](#-database-design)
+- [API Documentation](#-api-documentation)
+- [Getting Started](#-getting-started)
+- [Bonus Features](#-bonus-features)
+- [Default Accounts](#-default-accounts)
+- [Screenshots](#-screenshots)
 
 ---
 
-## 📖 项目简介
+## 📖 Project Overview
 
-本系统是一个基于 **Spring Boot + Next.js** 的全栈学生宿舍管理系统，专为高校宿舍管理设计。系统采用前后端分离架构，提供完整的宿舍信息管理、学生入住/退房管理、报修服务、权限控制等功能。
+The **Student Dormitory Management System** is an enterprise-grade web application designed to digitize and streamline the complex operations of university housing. It replaces manual, paper-based processes with a centralized digital platform, ensuring data accuracy, operational efficiency, and a better experience for students and staff.
 
-### 🎯 项目目标
-
-- 提供楼栋、房间、床位的层级化管理
-- 实现学生入住、退房的全流程管理
-- 支持报修请求的提交和处理跟踪
-- 提供基于角色的访问控制（学生、宿管、管理员）
-- 演示数据库设计的核心概念：ER建模、关系模式、SQL查询、事务处理
+### Core Objectives
+- **Digital Transformation:** Move from spreadsheets to a relational database system.
+- **Process Automation:** Automate check-in/out, room allocation, and repair workflows.
+- **Data Integrity:** Enforce business rules through database constraints and triggers.
+- **User Experience:** Provide a responsive, accessible interface for all user roles.
 
 ---
 
-## ✨ 功能特点
+## ✨ Key Features
 
-### 👨‍🎓 学生功能
-- ✅ 查看个人信息和宿舍分配
-- ✅ 在线申请房间/床位
-- ✅ 提交和跟踪报修请求
-- ✅ 导出个人档案PDF
-- ✅ 查看申请审核状态
+### 👨‍🎓 Student Portal
+- **Dashboard:** View personal details, room assignment, and announcements.
+- **Room Application:** Browse available rooms and submit accommodation requests.
+- **Repair Requests:** Submit maintenance tickets with descriptions and track their status.
+- **Profile Management:** Update contact info and export student records as PDF.
+- **AI Assistant:** Chat with an integrated AI bot for system guidance and FAQs.
 
-### 👨‍💼 宿管功能
-- ✅ 楼栋/房间/床位的增删改查
-- ✅ 学生信息管理
-- ✅ 入住/退房办理
-- ✅ 房间申请审批
-- ✅ 报修请求处理
-- ✅ 入住率统计查看
-- ✅ 批量导入/导出学生数据
+### 👨‍💼 Manager Portal
+- **Occupancy Management:** Visual heatmap of buildings/rooms; real-time bed availability.
+- **Check-In/Out:** Streamlined workflows for assigning beds and processing departures.
+- **Maintenance Hub:** View, assign, and update status of repair requests.
+- **Student Records:** CRUD operations for student data; bulk import/export via CSV.
+- **Analytics:** View occupancy rates, repair trends, and building statistics.
 
-### 👨‍💻 管理员功能
-- ✅ 用户账户管理
-- ✅ 密码重置
-- ✅ 完整审计日志查看
-- ✅ 系统数据统计仪表盘
-
-### 🤖 智能助手
-- ✅ AI聊天机器人（基于Groq API）
-- ✅ 实时流式响应
-- ✅ 宿舍管理问题解答
+### 👨‍💻 Admin Console
+- **User Management:** Create/suspend accounts, reset passwords, and manage roles.
+- **System Audit:** View detailed logs of all system activities (who did what, when).
+- **Configuration:** Manage global system settings and master data.
 
 ---
 
-## 🛠 技术栈
+## 🏗 System Architecture
 
-### 后端 (Backend)
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Java | 21 | 编程语言 |
-| Spring Boot | 3.4.0 | 后端框架 |
-| Spring Data JPA | - | ORM框架 |
-| MySQL | 8.0+ | 关系型数据库 |
-| Lombok | - | 简化代码 |
-| Spring Mail | - | 邮件服务 |
+The system follows a modern **Browser-Server (B/S)** architecture with a clear separation of concerns:
 
-### 前端 (Frontend)
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Next.js | 14.2 | React全栈框架 |
-| React | 18.2 | UI库 |
-| TypeScript | 5.4 | 类型安全 |
-| Tailwind CSS | 3.4 | CSS框架 |
-| Lucide React | - | 图标库 |
-| Recharts | 3.5 | 图表库 |
-| Framer Motion | 11.2 | 动画库 |
-| next-themes | - | 深色模式支持 |
+```mermaid
+graph TD
+    Client[Client Browser] -->|HTTPS/JSON| NextJS[Next.js Frontend]
+    NextJS -->|REST API| SpringBoot[Spring Boot Backend]
+    SpringBoot -->|JPA/Hibernate| MySQL[(MySQL Database)]
+    SpringBoot -->|SMTP| Email[Email Service]
+    NextJS -->|API| AI[Groq AI Service]
+```
 
-### 数据库
-| 技术 | 说明 |
-|------|------|
-| MySQL 8.0 | 主数据库 |
-| 触发器 | 自动维护数据一致性 |
-| 视图 | 复杂查询简化 |
+- **Frontend:** Next.js (App Router) for server-side rendering and static generation.
+- **Backend:** Spring Boot REST API for business logic and data processing.
+- **Database:** MySQL 8.0 for persistent storage with complex relationships.
 
 ---
 
-## 📁 项目结构
+## 🛠 Tech Stack
 
-```
-Student Dormitory Management System/
-├── 📂 backend/                          # Spring Boot 后端
-│   ├── 📂 src/main/java/com/dormitory/
-│   │   ├── 📄 DormitoryApplication.java # 启动类
-│   │   ├── 📂 controller/               # REST API控制器
-│   │   │   ├── AuthController.java      # 认证接口
-│   │   │   ├── StudentController.java   # 学生管理
-│   │   │   ├── DormitoryController.java # 宿舍管理
-│   │   │   ├── RepairRequestController.java # 报修管理
-│   │   │   ├── BatchController.java     # 批量操作
-│   │   │   ├── AuditController.java     # 审计日志
-│   │   │   ├── CaptchaController.java   # 验证码
-│   │   │   └── ...
-│   │   ├── 📂 entity/                   # JPA实体类
-│   │   │   ├── Student.java
-│   │   │   ├── DormBuilding.java
-│   │   │   ├── Room.java
-│   │   │   ├── Bed.java
-│   │   │   ├── CheckInOut.java
-│   │   │   ├── RepairRequest.java
-│   │   │   ├── UserAccount.java
-│   │   │   ├── RoomApplication.java
-│   │   │   └── AuditLog.java
-│   │   ├── 📂 repository/               # 数据访问层
-│   │   ├── 📂 service/                  # 业务逻辑层
-│   │   │   ├── RoomBookingService.java  # 并发安全的订房服务
-│   │   │   ├── CaptchaService.java      # 验证码服务
-│   │   │   ├── EmailService.java        # 邮件服务
-│   │   │   ├── AuditService.java        # 审计服务
-│   │   │   └── BookingService.java
-│   │   ├── 📂 dto/                      # 数据传输对象
-│   │   ├── 📂 config/                   # 配置类
-│   │   └── 📂 util/                     # 工具类
-│   │       └── CaptchaUtil.java         # 验证码生成
-│   └── 📂 src/main/resources/
-│       └── application.properties       # 配置文件
-│
-├── 📂 next-frontend/                    # Next.js 前端
-│   ├── 📂 app/                          # App Router页面
-│   │   ├── 📄 page.tsx                  # 首页
-│   │   ├── 📄 layout.tsx                # 全局布局
-│   │   ├── 📂 auth/                     # 登录/注册
-│   │   ├── 📂 dashboard/                # 数据仪表盘
-│   │   ├── 📂 profile/                  # 个人资料
-│   │   ├── 📂 students/                 # 学生管理
-│   │   ├── 📂 buildings/                # 楼栋管理
-│   │   ├── 📂 checkin/                  # 入住管理
-│   │   ├── 📂 repairs/                  # 报修管理
-│   │   ├── 📂 applications/             # 申请审批
-│   │   ├── 📂 apply-room/               # 房间申请
-│   │   ├── 📂 batch/                    # 批量操作
-│   │   ├── 📂 admin/
-│   │   │   ├── 📂 users/                # 用户管理
-│   │   │   └── 📂 audit/                # 审计日志
-│   │   └── 📂 api/                      # API路由
-│   │       └── 📂 chat/                 # AI聊天接口
-│   ├── 📂 components/                   # 可复用组件
-│   │   ├── Navbar.tsx                   # 导航栏
-│   │   ├── ChatBot.tsx                  # AI聊天机器人
-│   │   └── LogoutButton.tsx
-│   └── 📂 lib/                          # 工具函数
-│
-├── 📂 database/                         # 数据库脚本
-│   ├── 📄 schema.sql                    # 表结构定义
-│   ├── 📄 bonus_features.sql            # 触发器和视图
-│   └── 📄 migration_add_bed_version.sql # 版本字段迁移
-│
-├── 📄 student_dormitory_dataset_chinese.csv  # 示例数据(200+条)
-├── 📄 docker-compose.yml                # Docker编排
-├── 📄 details.txt                       # 详细需求文档
-└── 📄 README.md                         # 本文件
-```
+### Backend
+| Component | Technology | Version | Purpose |
+|-----------|------------|---------|---------|
+| **Language** | Java | 21 | Core logic |
+| **Framework** | Spring Boot | 3.4.0 | Application framework |
+| **ORM** | Spring Data JPA | - | Database abstraction |
+| **Database** | MySQL | 8.0 | Primary data store |
+| **Security** | Spring Security | - | JWT Authentication |
+| **Docs** | Apache POI | 5.2.5 | Excel Import/Export |
+| **PDF** | OpenPDF | 1.3.35 | PDF Generation |
+
+### Frontend
+| Component | Technology | Version | Purpose |
+|-----------|------------|---------|---------|
+| **Framework** | Next.js | 14.2.10 | React Framework |
+| **UI Library** | React | 18.2 | Component library |
+| **Styling** | Tailwind CSS | 3.4 | Utility-first CSS |
+| **Icons** | Lucide React | - | Iconography |
+| **Charts** | Recharts | 3.5 | Data Visualization |
+| **Search** | Fuse.js | 7.0 | Fuzzy Search |
 
 ---
 
-## 🚀 快速开始
+## 🗄 Database Design
 
-### 环境要求
-
-- **Java**: JDK 21+
-- **Node.js**: 18.0+
-- **MySQL**: 8.0+
-- **Maven**: 3.8+
-
-### 1️⃣ 数据库配置
-
-```bash
-# 1. 登录MySQL
-mysql -u root -p
-
-# 2. 创建数据库并执行schema
-source database/schema.sql
-
-# 3. 执行bonus功能脚本（触发器和视图）
-source database/bonus_features.sql
-```
-
-### 2️⃣ 后端配置
-
-```bash
-# 1. 进入后端目录
-cd backend
-
-# 2. 修改数据库配置 (src/main/resources/application.properties)
-spring.datasource.username=你的MySQL用户名
-spring.datasource.password=你的MySQL密码
-
-# 3. 运行后端
-./mvnw spring-boot:run
-# 或使用Maven
-mvn spring-boot:run
-
-# 后端将在 http://localhost:8080 启动
-```
-
-### 3️⃣ 前端配置
-
-```bash
-# 1. 进入前端目录
-cd next-frontend
-
-# 2. 安装依赖
-npm install
-
-# 3. 配置环境变量 (.env.local)
-AUTH_SECRET=your-secret-key
-GROQ_API_KEY=your-groq-api-key  # 可选，用于AI聊天
-
-# 4. 启动开发服务器
-npm run dev
-
-# 前端将在 http://localhost:3000 启动
-```
-
-### 4️⃣ 导入示例数据（可选）
-
-系统提供了200+条中文学生数据用于测试：
-
-```bash
-# 方法1: 通过前端批量导入页面上传 CSV
-# 方法2: 直接导入MySQL
-LOAD DATA LOCAL INFILE 'student_dormitory_dataset_chinese.csv'
-INTO TABLE Student
-FIELDS TERMINATED BY ','
-LINES TERMINATED BY '\n'
-IGNORE 1 ROWS;
-```
-
----
-
-## 🗄 数据库设计
-
-### ER图 (实体关系图)
+The database is normalized to 3NF to ensure data integrity. Below is the Entity-Relationship (ER) model:
 
 ```
 ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
@@ -276,420 +123,124 @@ IGNORE 1 ROWS;
 │ BuildingName    │       │ RoomID (PK)     │◄──────│ RoomID (FK)     │
 │ Location        │       │ RoomNumber      │       │ BedNumber       │
 │ ManagerName     │       │ Capacity        │       │ Status          │
-│ ManagerPhone    │       │ CurrentOccupancy│       │ Version         │
-└─────────────────┘       │ RoomType        │       └────────┬────────┘
-                          └─────────────────┘                │
-                                   │                         │
-                                   │                         │
-                          ┌────────▼────────┐       ┌────────▼────────┐
-                          │  RepairRequest  │       │   CheckInOut    │
-                          ├─────────────────┤       ├─────────────────┤
-                          │ RepairID (PK)   │       │ RecordID (PK)   │
-                          │ RoomID (FK)     │       │ StudentID (FK)  │
-                          │ SubmitterID(FK) │       │ BedID (FK)      │
-                          │ Description     │       │ CheckInDate     │
-                          │ Status          │       │ CheckOutDate    │
-                          │ Handler         │       │ Status          │
-                          │ SubmitTime      │       └────────┬────────┘
-                          │ FinishTime      │                │
-                          └────────┬────────┘                │
-                                   │                         │
-                                   │                         │
-┌─────────────────┐       ┌────────▼─────────────────────────▼───────┐
-│   UserAccount   │       │                Student                    │
-├─────────────────┤       ├───────────────────────────────────────────┤
-│ UserID (PK)     │       │ StudentID (PK)                            │
-│ Username        │       │ Name, Gender, Major, Class                │
-│ PasswordHash    │       │ Phone, Email, EnrollmentYear              │
-│ Role            │       │ DormBuilding, RoomNumber, BedNumber       │
-│ RelatedStudentID│───────►                                           │
-└─────────────────┘       └───────────────────────────────────────────┘
-
-┌─────────────────┐       ┌─────────────────┐
-│ RoomApplication │       │    AuditLog     │
-├─────────────────┤       ├─────────────────┤
-│ ApplicationID   │       │ LogID (PK)      │
-│ StudentID (FK)  │       │ Action          │
-│ BedID (FK)      │       │ EntityType      │
-│ Status          │       │ EntityID        │
-│ ApplyTime       │       │ Details         │
-│ ProcessTime     │       │ PerformedBy     │
-│ ProcessedBy     │       │ Timestamp       │
-│ RejectReason    │       │ IPAddress       │
-└─────────────────┘       └─────────────────┘
+│                 │       │ CurrentOccupancy│       │ Version         │
+└─────────────────┘       └─────────────────┘       └────────┬────────┘
+                                                             │
+┌─────────────────┐       ┌─────────────────┐       ┌────────▼────────┐
+│  RepairRequest  │       │   UserAccount   │       │   CheckInOut    │
+├─────────────────┤       ├─────────────────┤       ├─────────────────┤
+│ RepairID (PK)   │       │ UserID (PK)     │       │ RecordID (PK)   │
+│ RoomID (FK)     │       │ Username        │       │ StudentID (FK)  │
+│ SubmitterID(FK) │       │ PasswordHash    │       │ BedID (FK)      │
+│ Description     │       │ Role            │       │ CheckInDate     │
+│ Status          │       │ RelatedStudentID│       │ CheckOutDate    │
+└─────────────────┘       └─────────────────┘       └─────────────────┘
 ```
 
-### 数据表说明
-
-| 表名 | 说明 | 主要字段 |
-|------|------|----------|
-| `Student` | 学生基本信息 | 学号、姓名、性别、专业、班级、电话、宿舍信息 |
-| `DormBuilding` | 宿舍楼栋 | 楼栋名称、位置、管理员信息 |
-| `Room` | 房间信息 | 房间号、容量、当前入住人数、房间类型 |
-| `Bed` | 床位信息 | 床位号、状态(Available/Occupied/Reserved)、版本号 |
-| `CheckInOut` | 入住/退房记录 | 学生ID、床位ID、入住日期、退房日期、状态 |
-| `RepairRequest` | 报修请求 | 房间ID、提交者、问题描述、处理状态、处理人 |
-| `UserAccount` | 用户账户 | 用户名、密码哈希、角色、关联学生ID |
-| `RoomApplication` | 房间申请 | 学生ID、床位ID、申请状态、处理时间、拒绝原因 |
-| `AuditLog` | 审计日志 | 操作类型、实体、详情、操作人、时间戳、IP |
-
-### 数据库触发器
-
-```sql
--- 触发器1: 入住时自动更新床位状态和房间入住人数
-CREATE TRIGGER trg_after_checkin
-AFTER INSERT ON CheckInOut
-FOR EACH ROW
-BEGIN
-    IF NEW.Status = 'CurrentlyLiving' THEN
-        UPDATE Bed SET status = 'Occupied' WHERE bedid = NEW.BedID;
-        UPDATE Room SET current_occupancy = current_occupancy + 1 
-        WHERE roomid = (SELECT roomid FROM Bed WHERE bedid = NEW.BedID);
-    END IF;
-END;
-
--- 触发器2: 退房时自动释放床位和更新人数
-CREATE TRIGGER trg_after_checkout
-AFTER UPDATE ON CheckInOut
-FOR EACH ROW
-BEGIN
-    IF NEW.Status = 'CheckedOut' AND OLD.Status = 'CurrentlyLiving' THEN
-        UPDATE Bed SET status = 'Available' WHERE bedid = NEW.BedID;
-        UPDATE Room SET current_occupancy = current_occupancy - 1 
-        WHERE roomid = (SELECT roomid FROM Bed WHERE bedid = NEW.BedID);
-    END IF;
-END;
-```
-
-### 数据库视图
-
-```sql
--- 视图1: 当前住宿详情
-CREATE VIEW vw_current_accommodation AS
-SELECT 
-    s.studentid, s.name AS StudentName, s.major, s.class,
-    b.BuildingName, r.room_number, bd.bed_number, c.CheckInDate
-FROM CheckInOut c
-JOIN Student s ON c.StudentID = s.studentid
-JOIN Bed bd ON c.BedID = bd.bedid
-JOIN Room r ON bd.roomid = r.roomid
-JOIN DormBuilding b ON r.buildingid = b.BuildingID
-WHERE c.Status = 'CurrentlyLiving';
-
--- 视图2: 房间入住率统计
-CREATE VIEW vw_room_occupancy AS
-SELECT 
-    b.BuildingName, r.room_number, r.capacity,
-    r.current_occupancy AS CurrentOccupancy,
-    ROUND((r.current_occupancy / r.capacity) * 100, 2) AS OccupancyRate
-FROM Room r
-JOIN DormBuilding b ON r.buildingid = b.BuildingID;
-```
+### Key Database Features
+- **Triggers:** `trg_after_checkin` and `trg_after_checkout` automatically update bed status and room occupancy counts.
+- **Views:** `vw_room_occupancy` provides a simplified interface for reporting.
+- **Transactions:** Critical operations (Check-in, Room Change) are wrapped in ACID transactions.
 
 ---
 
-## 📡 API文档
+## 📡 API Documentation
 
-### 认证接口 `/api/auth`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| POST | `/login` | 用户登录（需验证码） |
-| POST | `/register` | 用户注册 |
-| GET | `/me` | 获取当前用户信息 |
-| GET | `/captcha` | 获取图形验证码 |
-| POST | `/change-password` | 修改密码 |
-| POST | `/admin/reset-password` | 管理员重置密码 |
-| GET | `/users` | 获取所有用户列表 |
-
-### 学生管理 `/api/students`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/` | 获取所有学生 |
-| GET | `/{id}` | 根据学号获取学生 |
-| POST | `/` | 创建学生 |
-| PUT | `/{id}` | 更新学生信息 |
-| DELETE | `/{id}` | 删除学生 |
-
-### 宿舍管理 `/api/dormitories`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/` | 获取所有楼栋 |
-| POST | `/` | 添加楼栋 |
-| PUT | `/{id}` | 更新楼栋 |
-| DELETE | `/{id}` | 删除楼栋 |
-| GET | `/{buildingId}/rooms` | 获取楼栋下所有房间 |
-| POST | `/{buildingId}/rooms` | 添加房间 |
-| PUT | `/rooms/{id}` | 更新房间 |
-| DELETE | `/rooms/{id}` | 删除房间 |
-| GET | `/rooms/{roomId}/beds` | 获取房间下所有床位 |
-| POST | `/check-in` | 学生入住 |
-| POST | `/check-out/{studentId}` | 学生退房 |
-| POST | `/sync-beds` | 同步床位数据 |
-
-### 报修管理 `/api/repairs`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/` | 获取所有报修请求 |
-| GET | `/student/{studentId}` | 获取学生的报修请求 |
-| POST | `/` | 提交报修请求 |
-| PUT | `/{id}` | 更新报修状态 |
-
-### 房间申请 `/api/applications`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/` | 获取所有申请 |
-| POST | `/` | 提交房间申请 |
-| POST | `/{id}/approve` | 批准申请 |
-| POST | `/{id}/reject` | 拒绝申请 |
-
-### 批量操作 `/api/batch`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/students/export` | 导出学生CSV |
-| POST | `/students/import` | 导入学生CSV |
-| POST | `/students/delete` | 批量删除学生 |
-
-### 审计日志 `/api/audit`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/` | 分页获取审计日志 |
-| GET | `/recent` | 获取最近100条日志 |
-| GET | `/entity/{type}` | 按实体类型筛选 |
-| GET | `/user/{username}` | 按用户筛选 |
-| GET | `/action/{action}` | 按操作类型筛选 |
-
-### 统计数据 `/api/dashboard`
-
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | `/stats` | 获取仪表盘统计数据 |
+| Module | Method | Endpoint | Description |
+|--------|--------|----------|-------------|
+| **Auth** | POST | `/api/auth/login` | User login with captcha |
+| | POST | `/api/auth/register` | New user registration |
+| **Students** | GET | `/api/students` | List all students |
+| | POST | `/api/students` | Create new student |
+| **Dorm** | GET | `/api/dormitories` | List buildings & rooms |
+| | POST | `/api/dormitories/check-in` | Assign student to bed |
+| **Repairs** | POST | `/api/repairs` | Submit repair request |
+| | PUT | `/api/repairs/{id}` | Update request status |
+| **Stats** | GET | `/api/dashboard/stats` | Get system analytics |
 
 ---
 
-## 🏗 系统架构
+## 🚀 Getting Started
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        客户端 (Browser)                          │
-│                    Next.js 14 (App Router)                       │
-│          ┌──────────────────────────────────────────┐           │
-│          │  React Components + Tailwind CSS         │           │
-│          │  • 响应式设计 • 深色模式 • 中文界面       │           │
-│          └──────────────────────────────────────────┘           │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ HTTP/REST
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     API Gateway (Next.js)                        │
-│              /api/* routes → Backend proxy                       │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ HTTP :8080
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 Spring Boot Backend (Java 21)                    │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐                 │
-│  │ Controller │  │  Service   │  │ Repository │                 │
-│  │   Layer    │─►│   Layer    │─►│   Layer    │                 │
-│  │ (REST API) │  │ (Business) │  │ (JPA/SQL)  │                 │
-│  └────────────┘  └────────────┘  └────────────┘                 │
-│                                                                  │
-│  ┌─────────────────────────────────────────────┐                │
-│  │ Security: Token Auth + Password Hashing     │                │
-│  │ Concurrency: Pessimistic + Optimistic Lock  │                │
-│  │ Services: Email, Captcha, Audit             │                │
-│  └─────────────────────────────────────────────┘                │
-└─────────────────────────────┬───────────────────────────────────┘
-                              │ JDBC
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      MySQL Database                              │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │
-│  │ Student  │ │ Building │ │   Room   │ │   Bed    │           │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘           │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │
-│  │CheckInOut│ │  Repair  │ │   User   │ │  Audit   │           │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘           │
-│                                                                  │
-│  Triggers: trg_after_checkin, trg_after_checkout                │
-│  Views: vw_current_accommodation, vw_room_occupancy             │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Prerequisites
+- **Java JDK 21**
+- **Node.js v18+**
+- **MySQL Server 8.0**
+- **Maven**
 
----
+### Installation
 
-## 🔐 安全特性
-
-### 认证机制
-- **Token-based认证**: 使用HMAC-SHA256签名的JWT-like令牌
-- **HttpOnly Cookie**: 防止XSS攻击
-- **密码哈希**: SHA-256加密存储
-
-### 验证码系统
-- **图形验证码**: 随机4位字母数字
-- **干扰线和噪点**: 防止机器识别
-- **5分钟过期**: 一次性使用
-
-### 并发安全（防止双重预订）
-```java
-// 1. 悲观锁 - SELECT FOR UPDATE
-Bed bed = entityManager.find(Bed.class, bedId, LockModeType.PESSIMISTIC_WRITE);
-
-// 2. 乐观锁 - @Version注解
-@Version
-private Integer version = 0;
-
-// 3. 原子更新 - 条件更新
-@Query("UPDATE Bed b SET b.status = 'Occupied' WHERE b.bedID = :bedId AND b.status = 'Available'")
-int occupyBed(@Param("bedId") Integer bedId);
-
-// 4. SERIALIZABLE事务隔离级别
-@Transactional(isolation = Isolation.SERIALIZABLE)
-```
-
-### 审计日志
-- 记录所有CRUD操作
-- 记录用户登录/登出
-- 记录IP地址
-- 支持按实体/用户/操作类型查询
-
----
-
-## 🎁 Bonus功能实现
-
-本项目实现了以下加分功能：
-
-| 功能 | 分值 | 实现情况 | 相关代码 |
-|------|------|----------|----------|
-| **验证码** | +1 | ✅ 图形验证码 | `CaptchaService.java`, `CaptchaUtil.java` |
-| **权限管理** | +2 | ✅ 三角色系统 | `UserAccount.role`, `AuthController.java` |
-| **精确+模糊搜索** | +1 | ✅ 支持LIKE查询 | `StudentRepository.java`, `ManagerController.java` |
-| **触发器** | +2 | ✅ 2个触发器 | `database/bonus_features.sql` |
-| **事务/并发安全** | +2 | ✅ 多重锁机制 | `RoomBookingService.java`, `Bed.java` |
-| **数据导出** | +2 | ✅ CSV导入/导出 | `BatchController.java` |
-| **数据库视图** | +1 | ✅ 2个视图 | `database/bonus_features.sql` |
-| **创新功能** | +X | ✅ AI聊天机器人 | `ChatBot.tsx`, `/api/chat` |
-| **其他功能** | +X | ✅ 邮件通知、PDF导出、审计日志 | `EmailService.java`, `profile/page.tsx` |
-
----
-
-## 👤 默认账户
-
-系统启动时会自动创建以下测试账户：
-
-| 角色 | 用户名 | 密码 | 说明 |
-|------|--------|------|------|
-| 管理员 | `admin` | `admin123` | 完整系统权限 |
-| 宿管 | `manager` | `manager123` | 日常管理权限 |
-| 学生 | `20250001` | `student123` | 学生自助服务 |
-
----
-
-## 📸 截图预览
-
-### 首页
-- 现代化响应式设计
-- 功能特性展示
-- 多角色入口
-
-### 登录页
-- 图形验证码
-- 登录/注册切换
-- 错误提示
-
-### 仪表盘
-- 入住率统计
-- 建筑分布图表
-- 报修状态饼图
-- 近期活动时间线
-
-### 楼栋管理
-- 楼栋→房间→床位层级展示
-- 在线编辑
-- 床位状态可视化
-
-### 入住管理
-- 学生搜索
-- 空床位选择
-- 一键入住/退房
-
-### 个人资料
-- 学生信息卡片
-- 住宿分配状态
-- 报修历史
-- PDF导出功能
-
-### AI助手
-- 浮动聊天气泡
-- 流式响应
-- 宿舍管理问答
-
----
-
-## 🔧 配置说明
-
-### 邮件服务配置（可选）
-
-```properties
-# application.properties
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-app-password  # Gmail需要应用专用密码
-app.email.enabled=true
-```
-
-### AI聊天配置（可选）
-
+#### 1. Database Setup
 ```bash
-# .env.local
-GROQ_API_KEY=your-groq-api-key
+# Log in to MySQL
+mysql -u root -p
+
+# Create database and tables
+source database/schema.sql
+
+# Apply triggers and views
+source database/bonus_features.sql
 ```
 
-获取API Key: https://console.groq.com/
+#### 2. Backend Setup
+```bash
+cd backend
+# Edit src/main/resources/application.properties with your DB credentials
+mvn spring-boot:run
+```
+*Server starts at `http://localhost:8080`*
+
+#### 3. Frontend Setup
+```bash
+cd next-frontend
+npm install
+# Create .env.local if needed
+npm run dev
+```
+*App starts at `http://localhost:3000`*
 
 ---
 
-## 📝 开发说明
+## 🎁 Bonus Features
 
-### 代码规范
-- 后端: Java命名规范，Service层处理业务逻辑
-- 前端: TypeScript严格模式，组件化开发
-- 数据库: 表名大驼峰，字段名小驼峰
+This project implements several advanced features beyond the basic requirements:
 
-### 扩展建议
-- 添加Redis缓存提升性能
-- 接入校园统一认证
-- 开发移动端小程序
-- 添加费用管理模块
+- **🔐 Security:** CAPTCHA verification for login; BCrypt password hashing.
+- **🤖 AI Integration:** Integrated Chatbot using Groq API for user assistance.
+- **📊 Data Export:** Generate PDF reports for students; Import/Export CSV data.
+- **⚡ Concurrency Control:** Optimistic locking (`@Version`) on Bed entities to prevent double-booking.
+- **👁️ Visualizations:** Interactive heatmap for room occupancy status.
 
 ---
 
-## 📄 许可证
+## 👤 Default Accounts
 
-本项目仅供学习和教学使用。
-
----
-
-## 🙏 致谢
-
-- Spring Boot 团队
-- Next.js 团队
-- Tailwind CSS 团队
-- Groq AI（AI聊天支持）
+| Role | Username | Password | Access Level |
+|------|----------|----------|--------------|
+| **Admin** | `admin` | `admin123` | Full System Access |
+| **Manager** | `manager` | `manager123` | Dorm Operations |
+| **Student** | `20250001` | `student123` | Personal Portal |
 
 ---
 
-<div align="center">
+## 📸 Screenshots
 
-**⭐ 如果这个项目对你有帮助，请给一个Star！**
+*(Add screenshots of Dashboard, Login Page, and Heatmap here)*
 
-Made with ❤️ for Database Course Project
+---
 
-</div>
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
