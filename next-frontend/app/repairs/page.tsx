@@ -18,7 +18,7 @@ type RepairRequest = {
 type UserInfo = {
   username: string
   role: string
-  studentId?: string
+  relatedStudentID?: string
 }
 
 // Fuse.js configuration for fuzzy search
@@ -65,8 +65,8 @@ export default function RepairsPage() {
           setUserInfo(data)
           setIsManager(data.role === 'Admin' || data.role === 'DormManager')
           // Pre-fill student ID for students
-          if (data.role === 'Student' && data.studentId) {
-            setForm(prev => ({ ...prev, submitterStudentID: data.studentId }))
+          if (data.role === 'Student' && data.relatedStudentID) {
+            setForm(prev => ({ ...prev, submitterStudentID: data.relatedStudentID }))
           }
         }
       } catch { /* ignore */ }
@@ -80,8 +80,8 @@ export default function RepairsPage() {
       let endpoint = '/api/repairs'
       
       // Students can only see their own repairs
-      if (userInfo && userInfo.role === 'Student' && userInfo.studentId) {
-        endpoint = `/api/repairs/student/${userInfo.studentId}`
+      if (userInfo && userInfo.role === 'Student' && userInfo.relatedStudentID) {
+        endpoint = `/api/repairs/student/${userInfo.relatedStudentID}`
       }
       
       const res = await fetch(endpoint, { credentials: 'include' })
@@ -132,7 +132,7 @@ export default function RepairsPage() {
     setSaving(true)
     try {
       // Use the student's ID from userInfo if available
-      const submitterId = userInfo?.studentId || form.submitterStudentID
+      const submitterId = userInfo?.relatedStudentID || form.submitterStudentID
       const res = await fetch('/api/repairs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,7 +145,7 @@ export default function RepairsPage() {
       })
       if (!res.ok) throw new Error('Failed')
       setModalOpen(false)
-      setForm({ roomID: '', submitterStudentID: userInfo?.studentId || '', description: '' })
+      setForm({ roomID: '', submitterStudentID: userInfo?.relatedStudentID || '', description: '' })
       load()
     } catch {
       alert('提交报修请求出错')
@@ -517,10 +517,10 @@ export default function RepairsPage() {
                   className="input" 
                   value={form.submitterStudentID} 
                   onChange={(e) => setForm({ ...form, submitterStudentID: e.target.value })}
-                  readOnly={!!userInfo?.studentId}
-                  disabled={!!userInfo?.studentId}
+                  readOnly={!!userInfo?.relatedStudentID}
+                  disabled={!!userInfo?.relatedStudentID}
                 />
-                {userInfo?.studentId && (
+                {userInfo?.relatedStudentID && (
                   <p className="mt-1 text-xs text-gray-500">学号已自动填入</p>
                 )}
               </div>

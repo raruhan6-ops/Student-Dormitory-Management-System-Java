@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
@@ -147,6 +148,33 @@ public class ManagerController {
         }
 
         return new com.dormitory.dto.OccupancyPage(items, total, page, size);
+    }
+
+    // --- Data Sync Endpoints ---
+
+    @PostMapping("/sync-occupancy")
+    @Transactional
+    public ResponseEntity<?> syncOccupancy() {
+        try {
+            // Update Room.CurrentOccupancy based on actual active CheckInOut records
+            int updated = entityManager.createNativeQuery(
+                "UPDATE Room r SET CurrentOccupancy = (" +
+                "    SELECT COUNT(*) FROM CheckInOut c " +
+                "    JOIN Bed b ON c.BedID = b.BedID " +
+                "    WHERE b.RoomID = r.RoomID AND c.Status = 'CurrentlyLiving'" +
+                ")").executeUpdate();
+            
+            // Also sync Bed status
+            entityManager.createNativeQuery(
+                "UPDATE Bed b SET Status = CASE " +
+                "    WHEN EXISTS (SELECT 1 FROM CheckInOut c WHERE c.BedID = b.BedID AND c.Status = 'CurrentlyLiving') " +
+                "    THEN 'Occupied' ELSE 'Available' END"
+            ).executeUpdate();
+
+            return ResponseEntity.ok("Synced occupancy and bed status for all rooms.");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to sync occupancy: " + e.getMessage());
+        }
     }
 
     // --- Export Endpoints (CSV) ---

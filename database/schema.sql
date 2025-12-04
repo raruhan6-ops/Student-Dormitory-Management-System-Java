@@ -127,14 +127,23 @@ WHERE c.Status = 'CurrentlyLiving';
 
 -- View 2: Room Occupancy Statistics
 -- Shows occupancy rate for each room in each building
+-- Updated to calculate occupancy dynamically from CheckInOut table to ensure consistency
 CREATE OR REPLACE VIEW vw_room_occupancy AS
 SELECT 
     db.BuildingName,
     r.RoomNumber,
     r.Capacity,
-    COALESCE(r.CurrentOccupancy, 0) AS CurrentOccupancy,
+    (SELECT COUNT(*) 
+     FROM CheckInOut c 
+     JOIN Bed b ON c.BedID = b.BedID 
+     WHERE b.RoomID = r.RoomID AND c.Status = 'CurrentlyLiving') AS CurrentOccupancy,
     CASE 
-        WHEN r.Capacity > 0 THEN ROUND((COALESCE(r.CurrentOccupancy, 0) / r.Capacity) * 100, 2)
+        WHEN r.Capacity > 0 THEN ROUND((
+            (SELECT COUNT(*) 
+             FROM CheckInOut c 
+             JOIN Bed b ON c.BedID = b.BedID 
+             WHERE b.RoomID = r.RoomID AND c.Status = 'CurrentlyLiving')
+            / r.Capacity) * 100, 2)
         ELSE 0
     END AS OccupancyRate
 FROM Room r

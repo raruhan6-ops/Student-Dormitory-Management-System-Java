@@ -62,6 +62,72 @@ public class StudentPortalController {
     private String authSecret;
 
     /**
+     * Get summary of all dormitory buildings (for homepage/visitors)
+     */
+    @GetMapping("/buildings/summary")
+    public ResponseEntity<List<com.dormitory.dto.BuildingSummaryDTO>> getBuildingSummaries() {
+        List<DormBuilding> buildings = buildingRepository.findAll();
+        List<Room> rooms = roomRepository.findAll();
+        List<Bed> beds = bedRepository.findAll();
+
+        List<com.dormitory.dto.BuildingSummaryDTO> summaries = buildings.stream().map(building -> {
+            com.dormitory.dto.BuildingSummaryDTO dto = new com.dormitory.dto.BuildingSummaryDTO();
+            dto.setBuildingID(building.getBuildingID());
+            dto.setBuildingName(building.getBuildingName());
+            dto.setLocation(building.getLocation());
+
+            // Calculate stats
+            List<Room> buildingRooms = rooms.stream()
+                    .filter(r -> r.getBuildingID().equals(building.getBuildingID()))
+                    .collect(Collectors.toList());
+            
+            int totalCapacity = buildingRooms.stream()
+                    .mapToInt(r -> r.getCapacity() != null ? r.getCapacity() : 0)
+                    .sum();
+            
+            // Calculate available beds
+            // A bed is available if its status is "Available"
+            long availableBeds = beds.stream()
+                    .filter(b -> {
+                        // Check if bed belongs to a room in this building
+                        boolean inBuilding = buildingRooms.stream()
+                                .anyMatch(r -> r.getRoomID().equals(b.getRoomID()));
+                        return inBuilding && "Available".equalsIgnoreCase(b.getStatus());
+                    })
+                    .count();
+
+            dto.setTotalCapacity(totalCapacity);
+            dto.setAvailableBeds((int) availableBeds);
+
+            // Mock description and image based on building name
+            String name = building.getBuildingName();
+            if (name.contains("一号楼") || name.contains("1")) {
+                dto.setDescription("一号楼位于校园中心，毗邻图书馆，环境安静，适合潜心学习。配备四人间，拥有独立卫浴和空调。");
+                dto.setImageUrl("https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+            } else if (name.contains("二号楼") || name.contains("2")) {
+                dto.setDescription("二号楼靠近运动场，视野开阔，采光充足。楼内设有公共洗衣房和自动售货机，生活便利。");
+                dto.setImageUrl("https://images.unsplash.com/photo-1596276020587-8044fe049813?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+            } else if (name.contains("三号楼") || name.contains("3")) {
+                dto.setDescription("三号楼为新建宿舍楼，设施一流，配备电梯和智能门禁系统。每层设有宽敞的公共活动区域。");
+                dto.setImageUrl("https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+            } else if (name.contains("四号楼") || name.contains("4")) {
+                dto.setDescription("四号楼环境优美，绿树环绕。房间宽敞明亮，配套设施完善，是理想的居住选择。");
+                dto.setImageUrl("https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+            } else if (name.contains("五号楼") || name.contains("5")) {
+                dto.setDescription("五号楼位于生活区核心位置，距离食堂和超市仅一步之遥。居住氛围浓厚，社区活动丰富。");
+                dto.setImageUrl("https://images.unsplash.com/photo-1522771753037-63338189a855?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+            } else {
+                dto.setDescription("标准学生公寓，提供舒适安全的居住环境，配备基础生活设施，满足日常需求。");
+                dto.setImageUrl("https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(summaries);
+    }
+
+    /**
      * Create or update student profile (for the currently logged-in user)
      */
     @PostMapping("/profile")

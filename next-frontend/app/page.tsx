@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   ArrowRight
 } from 'lucide-react'
+import DormitoryBuildingsSection from '@/components/DormitoryBuildingsSection'
 
 export default function HomePage() {
   const features = [
@@ -124,6 +125,9 @@ export default function HomePage() {
           </svg>
         </div>
       </section>
+
+      {/* Dormitory Buildings Section */}
+      <DormitoryBuildingsSection />
 
       {/* Stats Section */}
       <section className="border-b border-gray-100 bg-gray-50 py-12 dark:border-gray-800 dark:bg-gray-900">
